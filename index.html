@@ -944,9 +944,10 @@ function recordStat(q, ok){
 }
 function levelOf(i){ return Math.min(ARC.times.length, Math.floor(i/ARC.perLevel)+1); }
 function showLevel(cb){
-  var cat = torMode ? (CATS[selCat] || 'TORNEO') : (level<=2 ? 'FÁCIL' : level<=4 ? 'MEDIO' : 'DIFÍCIL');
+  var cat = torMode ? (CATS[selCat] || 'TORNEO') : '';
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
+  document.getElementById('roundCat').style.display = cat ? '' : 'none';
   document.getElementById('roundBonus').textContent = tMax + ' SEGUNDOS · PUNTOS x' + ARC.mult[level-1];
   document.getElementById('lvlTag').textContent     = 'NIVEL ' + level;
   show('roundScreen');
