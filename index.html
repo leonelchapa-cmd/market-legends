@@ -1414,7 +1414,7 @@ function pushTorneo(){
 }
 // salir de la app en plena pregunta del torneo cuesta una vida
 document.addEventListener('visibilitychange', function(){
-  if(document.hidden && tInt && !answered && document.getElementById('gameScreen').classList.contains('active')){
+  if(document.hidden && torMode && tInt && !answered && document.getElementById('gameScreen').classList.contains('active')){
     answered = true; clearInterval(tInt);
     showC('Saliste de la app: -1 vida');
     loseLife();
