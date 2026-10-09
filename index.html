@@ -655,6 +655,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <div class="lg-stats" id="acStats"></div>
       <button class="lg-btn" id="acGo" onclick="goMenu(); startGame();">JUGAR</button>
       <button class="ac-prof" id="acProf" onclick="openProf()">MODO PROFESOR</button>
+      <div class="lg-link" id="acSnd" onclick="toggleSound()">Sonido: activado</div>
       <div class="lg-link" onclick="logout()">Cerrar sesión</div>
     </div>
   </div>
@@ -728,6 +729,34 @@ let score=0,coins=100,best=0,cur=0,tL=15,tInt=null,answered=false,roundNum=0;
 // ----- modo arcade -----
 const ARC = { times:[15,14,13,12,10], mult:[1,1.5,2,3,4], perLevel:5, lives:3, maxLives:5, contCost:50, bonusLifeAt:5000, maxQ:25, finishBonus:500, lifeBonus:250 };
 let lives=3, level=1, tMax=15, contUsed=false, bonusGiven=false, newRecord=false, hits=0, ctInt=null;
+// ===== SONIDO: los clips originales del APK de 2017 (audio/*.mp3) =====
+const SND = {menu:'audio/menu.mp3', juego:'audio/juego.mp3', inicio:'audio/inicio.mp3', victoria:'audio/victoria.mp3',
+             acierto:'audio/acierto.mp3', fallo:'audio/fallo.mp3', bono:'audio/bono.mp3', nivel:'audio/nivel.mp3'};
+var sndOn = true; try{ sndOn = localStorage.getItem('ml_snd') !== '0'; }catch(e){}
+var music = null, musicKey = '', sfx = {}, sndUnlocked = false;
+function sfxGet(k){ if(!sfx[k]){ sfx[k] = new Audio(SND[k]); sfx[k].preload = 'auto'; } return sfx[k]; }
+function sfxPlay(k){ if(!sndOn) return; try{ var a = sfxGet(k); a.currentTime = 0; a.volume = 0.9; a.play().catch(function(){}); }catch(e){} }
+function musicPlay(k){
+  musicKey = k; if(!sndOn) return;
+  if(music && music._key === k && !music.paused) return;
+  musicStop(); music = new Audio(SND[k]); music._key = k; music.loop = true; music.volume = (k==='menu') ? 0.3 : 0.25;
+  music.play().catch(function(){});
+}
+function musicStop(){ if(music){ try{ music.pause(); }catch(e){} music = null; } }
+function toggleSound(){
+  sndOn = !sndOn; try{ localStorage.setItem('ml_snd', sndOn ? '1' : '0'); }catch(e){}
+  if(!sndOn) musicStop(); else if(musicKey){ var k = musicKey; music = null; musicPlay(k); }
+  renderSnd();
+}
+function renderSnd(){ var e = document.getElementById('acSnd'); if(e) e.textContent = sndOn ? 'Sonido: activado' : 'Sonido: silenciado'; }
+// el navegador solo deja sonar después de un toque: en el primero se "desbloquean" los clips y arranca la música del menú
+function sndUnlock(){
+  if(sndUnlocked) return; sndUnlocked = true;
+  Object.keys(SND).forEach(function(k){ if(k==='menu'||k==='juego') return; var a = sfxGet(k); try{ a.volume = 0; a.play().then(function(){ a.pause(); a.currentTime = 0; a.volume = 0.9; }).catch(function(){ a.volume = 0.9; }); }catch(e){} });
+  if(document.getElementById('menuScreen').classList.contains('active')) musicPlay('menu');
+}
+document.addEventListener('pointerdown', sndUnlock, {once:false});
+document.addEventListener('visibilitychange', function(){ if(!music) return; if(document.hidden) music.pause(); else if(sndOn) music.play().catch(function(){}); });
 var hi = {score:0, name:''};   // HI-SCORE global (tope del leaderboard)
 var mode = 'normal';           // 'normal' (25 preguntas, con final) | 'infinito' (hasta perder); el torneo = normal + torMode
 var bestInf = 0, hiInf = {score:0, name:''};
@@ -914,7 +943,7 @@ function show(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
 }
-function goMenu(){clearInterval(tInt); clearInterval(ctInt); document.getElementById('quitOverlay').classList.remove('active'); torMode=false; renderTorneo(); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
+function goMenu(){clearInterval(tInt); clearInterval(ctInt); if(sndUnlocked) musicPlay('menu'); document.getElementById('quitOverlay').classList.remove('active'); torMode=false; renderTorneo(); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
 
 // ===== GAME FLOW =====
 // ===== CATEGORIA DE LA SEMANA (selector del menu) =====
@@ -937,6 +966,7 @@ function startGame() {
   if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
   else { rQ = withGen(buildRun(catPool(torMode ? selCat : 0)), torMode ? selCat : 0); }   // normal/torneo: 25 preguntas, una de cálculo por nivel
   renderLives(); renderHi();
+  sfxPlay('inicio');
   loadQ();
 }
 // Reparte la partida: niveles 1-2 preguntas faciles (d=1), 3-4 medias (d=2), 5 dificiles (d=3).
@@ -968,7 +998,8 @@ function pickN(a,n){ return shuffle(a).slice(0,n); }
 function f2(x){ return (Math.round(x*100)/100).toFixed(2); }
 function uniq4(ok, cands){
   var out=[ok]; cands.forEach(function(c){ if(out.length<4 && out.indexOf(c)<0) out.push(c); });
-  var k=1; while(out.length<4){ var alt = ok.replace(/[\d.,]+/, function(m){ var v=parseFloat(m.replace(/,/g,'')); return f2(v*(1+0.15*k)); }); if(out.indexOf(alt)<0) out.push(alt); k++; }
+  var k=1; while(out.length<4 && k<40){ var alt = ok.replace(/-?[\d.,]+/, function(m){ var v=parseFloat(m.replace(/,/g,'')); return f2(v + (v===0 ? 0.5*k : v*0.15*k)); }); if(out.indexOf(alt)<0) out.push(alt); k++; }
+  while(out.length<4) out.push(ok + ' (' + out.length + ')');
   return out;
 }
 var WEIGHTS2=[[50,50],[60,40],[70,30],[80,20]], WEIGHTS3=[[50,30,20],[40,40,20],[60,30,10],[50,25,25]];
@@ -1005,9 +1036,38 @@ function genSharpe(hard){
   return { q:'Un ETF rinde '+r+'% con volatilidad de '+v+'%; la tasa libre de riesgo es '+rf+'%. ¿Índice de Sharpe?',
            opts: uniq4(f2(sh), [f2(r/v), f2((r-rf)/v*2), f2(r-rf)]), e:'Sharpe = (rendimiento − tasa libre de riesgo) / volatilidad.' };
 }
+function genPW(hard){
+  // indice ponderado por precio: tres acciones, precio de inicio y de fin; retorno del indice en un mes
+  var p0 = pickN(hard?[8,12,25,35,45,60,75,90]:[10,20,30,40,50,60], 3);
+  var p1 = p0.map(function(p){ var ch = pickOne(hard?[-0.4,-0.25,-0.2,-0.1,0.1,0.25,0.5,1.0]:[-0.5,-0.25,0.25,0.5,1.0,-1/3]); return Math.round(p*(1+ch)); });
+  var i0 = (p0[0]+p0[1]+p0[2])/3, i1 = (p1[0]+p1[1]+p1[2])/3, ret = (i1/i0-1)*100;
+  if(Math.abs(ret) < 1) return genPW(hard);   // evita un retorno de 0%, que deja opciones iguales
+  var eq = (p1.map(function(p,i){ return p/p0[i]-1; }).reduce(function(a,x){ return a+x; },0)/3)*100;   // promedio simple de retornos (error tipico)
+  var filas = p0.map(function(p,i){ return 'acción '+(i+1)+' de '+p+' a '+p1[i]; }).join(', ');
+  return { q:'Índice ponderado por precio con tres acciones. En un mes: '+filas+' dólares. ¿Rendimiento del índice?',
+           opts: uniq4(f2(ret)+'%', [f2(eq)+'%', f2(-ret)+'%', f2(i1-i0)+'%']),
+           e:'Nivel del índice = suma de precios / 3. Retorno = nivel final / nivel inicial − 1. No es el promedio de los retornos.' };
+}
+function genIdx(hard){
+  // precio vs capitalizacion: tres acciones con acciones en circulacion y precio; una duplica su precio
+  var names=['A','B','C'], p = pickN([1,2,5,10,20,50,100], 3), caps = pickN([5,10,20,40], 3);   // capitalizacion en millones
+  var sh = caps.map(function(c,i){ return c*1e6/p[i]; });
+  var k = Math.floor(Math.random()*3), v = pickOne(hard?[1,3]:[0,1,2,3]);
+  var desc = names.map(function(n,i){ return n+': '+fmtN(sh[i])+' acciones a $'+p[i]; }).join('; ');
+  var sumP = p[0]+p[1]+p[2], sumC = caps[0]+caps[1]+caps[2];
+  if(v===0){ var nv=(sumP+p[k])/3; return { q:'Tres acciones. '+desc+'. Si la acción '+names[k]+' duplica su precio, ¿nuevo valor del índice ponderado por precio?',
+      opts: uniq4(f2(nv), [f2(sumP/3), f2((sumP+p[k])/2), f2(nv*2)]), e:'Índice ponderado por precio = suma de precios / 3.' }; }
+  if(v===1){ var ni=(sumC+caps[k])/sumC*100; return { q:'Tres acciones. '+desc+'. Índice ponderado por capitalización con base 100. Si la acción '+names[k]+' duplica su precio, ¿nuevo valor del índice?',
+      opts: uniq4(f2(ni), [f2(100+100/3), f2((sumP+p[k])/sumP*100), f2(200)]), e:'Índice = capitalización actual / capitalización base × 100.' }; }
+  var hiP = p.indexOf(Math.max.apply(null,p)), hiC = caps.indexOf(Math.max.apply(null,caps));
+  if(v===2){ return { q:'Tres acciones. '+desc+'. ¿Cuál mueve más al índice ponderado por PRECIO si duplica su valor?',
+      opts: uniq4('La acción '+names[hiP]+', la de mayor precio', ['La acción '+names[hiC]+', la de mayor capitalización', 'Todas igual, es un promedio', 'La de más acciones en circulación']), e:'En un índice por precio pesa la acción cara, sin importar el tamaño de la empresa.' }; }
+  return { q:'Tres acciones. '+desc+'. ¿Cuál mueve más al índice ponderado por CAPITALIZACIÓN si duplica su valor?',
+      opts: uniq4('La acción '+names[hiC]+', la de mayor capitalización', ['La acción '+names[hiP]+', la de mayor precio', 'Todas igual, es un promedio', 'La de menor precio']), e:'En un índice por capitalización pesa la empresa más grande.' };
+}
 function genQ(lv){
   var hard = lv>=5;
-  var q = pickOne([genBeta,genCAPM,genTER,genCap,genSharpe])(hard);
+  var q = pickOne([genBeta,genCAPM,genTER,genCap,genSharpe,genPW,genIdx])(hard);
   q.c=0; q.cat=1; q.d=3; q.gen=true;
   q.t = lv>5 ? Math.max(12, 25-(lv-5)*2) : 25;     // los cálculos llevan su propio reloj
   return q;
@@ -1030,7 +1090,8 @@ function showLevel(cb){
   document.getElementById('roundBonus').textContent = tMax + ' SEGUNDOS · PUNTOS x' + levelMult(level);
   document.getElementById('lvlTag').textContent     = 'NIVEL ' + level;
   show('roundScreen');
-  setTimeout(function(){ show('gameScreen'); cb(); }, level===1 ? 2200 : 1700);
+  if(level>1) sfxPlay('nivel');
+  setTimeout(function(){ show('gameScreen'); musicPlay('juego'); cb(); }, level===1 ? 2200 : 1700);
 }
 function renderLives(){
   var el = document.getElementById('lives'); el.innerHTML='';
@@ -1122,6 +1183,7 @@ function timeUp(){
   if(answered) return;
   answered = true;
   recordStat(rQ[cur], false);
+  sfxPlay('fallo');
   document.querySelectorAll('.ans').forEach(function(b){
     b.disabled = true;
     var oc = b.getAttribute('onclick');
@@ -1140,6 +1202,7 @@ function pick(idx, ci){
   clearInterval(tInt);
   document.querySelectorAll('.ans').forEach(function(b){ b.disabled=true; });
   recordStat(rQ[cur], idx === ci);
+  sfxPlay(idx === ci ? 'acierto' : 'fallo');
   if(idx === ci){
     document.getElementById('a'+idx).classList.add('correct');
     glowButton(document.getElementById('a'+idx), true); owlReact(true);
@@ -1149,9 +1212,9 @@ function pick(idx, ci){
     document.getElementById('cDisplay').textContent = coins;
     showC('+'+pts+' ⭐');
     owlCelebrate();
-    if(!bonusGiven && score >= ARC.bonusLifeAt && lives < ARC.maxLives){ bonusGiven = true; lives++; renderLives(); var ls=document.querySelectorAll('.life'); if(ls[lives-1]) ls[lives-1].classList.add('new'); setTimeout(function(){ showC('¡VIDA EXTRA!'); }, 900); }
+    if(!bonusGiven && score >= ARC.bonusLifeAt && lives < ARC.maxLives){ bonusGiven = true; lives++; renderLives(); var ls=document.querySelectorAll('.life'); if(ls[lives-1]) ls[lives-1].classList.add('new'); setTimeout(function(){ showC('¡VIDA EXTRA!'); sfxPlay('bono'); }, 900); }
     var H = curHi();
-    if(H.score && score > H.score && !newRecord){ newRecord = true; setTimeout(function(){ showC('¡NUEVO RÉCORD!'); }, 900); }
+    if(H.score && score > H.score && !newRecord){ newRecord = true; setTimeout(function(){ showC('¡NUEVO RÉCORD!'); sfxPlay('bono'); }, 900); }
     if(!H.score && score>0 && !newRecord){ newRecord = true; }
     renderHi();
     setTimeout(next, 1600);
@@ -1252,6 +1315,7 @@ function showC(txt){
 // ===== RESULT =====
 function showResult(dominated){
   clearInterval(tInt); clearInterval(ctInt);
+  musicStop(); sfxPlay(dominated ? 'victoria' : 'bono');
   coins += 30;
   var inf = (mode==='infinito');
   document.getElementById('rsTitle').textContent = dominated ? '¡RONDA COMPLETA!' : 'GAME OVER';
@@ -1335,6 +1399,7 @@ function openAccount(){          // engrane del menú
   document.getElementById('acName').textContent = playerName.toUpperCase();
   document.getElementById('acStats').textContent = 'Normal: ' + best.toLocaleString('es-MX') + ' pts. · Infinito: ' + bestInf.toLocaleString('es-MX') + ' pts.';
   document.getElementById('acProf').className = 'ac-prof' + (isProf() ? ' on' : '');
+  renderSnd();
   show('loginScreen');
 }
 function authMsg(code){
