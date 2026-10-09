@@ -1,6 +1,6 @@
 // Service worker de Market Legends: guarda el juego para abrirlo sin internet.
 // Sube la versión cada vez que cambie el juego para que los teléfonos descarguen lo nuevo.
-const VERSION = 'ml-v27';
+const VERSION = 'ml-v28';
 const FILES = [
   './',
   './index.html',
