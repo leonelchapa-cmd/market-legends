@@ -364,6 +364,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 /* ===== MODO ARCADE: vidas, nivel, HI-SCORE, continuar ===== */
 .arc-row{width:92%;margin:6px auto 0;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:10;height:26px;}
 .lives{display:flex;gap:4px;align-items:center;}
+.lives-wrap{display:flex;align-items:center;gap:8px;}
+.g-home{width:38px;height:30px;border:none;cursor:pointer;background:transparent center/100% 100% no-repeat;font-size:0;flex-shrink:0;}
+.g-home:active{transform:scale(.93);}
 .life{width:24px;height:24px;border-radius:50%;transition:opacity .3s,transform .3s;}
 .life.lost{opacity:.22;filter:grayscale(1);transform:scale(.85);}
 .life.new{animation:lifePop .5s ease;}
@@ -506,7 +509,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <div class="cpill"><img class="coin-ic" id="iCoin1" alt=""><span class="cnum" id="cDisplay">100</span></div>
     </div>
     <div class="arc-row">
-      <div class="lives" id="lives"></div>
+      <div class="lives-wrap"><button class="g-home" id="gHome" onclick="askQuit()" aria-label="Salir">Salir</button><div class="lives" id="lives"></div></div>
       <div class="lvl-tag" id="lvlTag">NIVEL 1</div>
       <div class="hi" id="hiLine"></div>
     </div>
@@ -637,6 +640,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     </div>
   </div>
 
+  <div class="ct-overlay" id="quitOverlay">
+    <div class="ct-card" id="quitCard">
+      <div class="ct-title">¿SALIR?</div>
+      <div class="ct-sub" id="quitSub">Se pierde la partida en curso.</div>
+      <button class="ct-btn" id="quitYes" onclick="quitYes()">SALIR</button>
+      <div class="ct-no" onclick="quitNo()">Seguir jugando</div>
+    </div>
+  </div>
   <div class="ct-overlay" id="ctOverlay">
     <div class="ct-card" id="ctCard">
       <div class="ct-title">¿CONTINUAR?</div>
@@ -741,6 +752,9 @@ window.onload = function() {
   document.querySelector('.jugar-btn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('iCoin1').src = ASSETS.sp_coins; document.getElementById('iCoin2').src = ASSETS.sp_coins;
   document.getElementById('ctCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  document.getElementById('quitCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  document.getElementById('quitYes').style.backgroundImage = "url("+ASSETS.btn_play+")";
+  document.getElementById('gHome').style.backgroundImage = "url("+ASSETS.sp_home+")";
   document.getElementById('torBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('sbBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('acProf').style.backgroundImage = "url("+ASSETS.btn_play+")";
@@ -874,7 +888,7 @@ function show(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
 }
-function goMenu(){clearInterval(tInt); clearInterval(ctInt); torMode=false; renderTorneo(); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
+function goMenu(){clearInterval(tInt); clearInterval(ctInt); document.getElementById('quitOverlay').classList.remove('active'); torMode=false; renderTorneo(); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
 
 // ===== GAME FLOW =====
 // ===== CATEGORIA DE LA SEMANA (selector del menu) =====
@@ -1059,6 +1073,25 @@ function loseLife(){
     if(!contUsed && coins >= ARC.contCost){ showContinue(); return; }
     showResult(false);
   }, 1600);
+}
+// ----- Salir de la partida (boton de inicio en el juego) -----
+var quitPaused = 0;
+function askQuit(){
+  if(!document.getElementById('gameScreen').classList.contains('active')) return;
+  document.getElementById('quitSub').textContent = torMode ? 'Es tu intento del torneo: se registra el puntaje que llevas.' : 'Se pierde la partida en curso.';
+  quitPaused = tEnd - Date.now(); clearInterval(tInt);   // el reloj se detiene mientras decide
+  document.getElementById('quitOverlay').classList.add('active');
+}
+function quitNo(){
+  document.getElementById('quitOverlay').classList.remove('active');
+  if(answered) return;
+  tEnd = Date.now() + Math.max(0, quitPaused);
+  tInt = setInterval(function(){ tL = Math.max(0, (tEnd-Date.now())/1000); tick(); if(tL <= 0){ clearInterval(tInt); timeUp(); } }, 100);
+}
+function quitYes(){
+  document.getElementById('quitOverlay').classList.remove('active');
+  clearInterval(tInt); answered = true;
+  if(torMode){ showResult(false); } else { goMenu(); }
 }
 // ----- ¿Continuar? (el "insert coin" de las maquinitas, con monedas del juego) -----
 var ctLeft = 9;
