@@ -302,6 +302,26 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .nm-card{background:transparent center/100% 100% no-repeat;border:none;box-shadow:none;padding:26px 24px 24px;}
 
 
+
+/* ===== REGISTRO / ENTRAR (apodo + PIN) ===== */
+#loginScreen{background:#3E1C63;align-items:center;justify-content:flex-start;}
+#lgBack{position:absolute;top:14px;left:14px;z-index:20;width:54px;height:42px;border:none;background:transparent center/100% 100% no-repeat;font-size:0;cursor:pointer;}
+.lg-card{position:relative;z-index:5;width:92%;margin-top:112px;padding:30px 24px 26px;background:transparent center/100% 100% no-repeat;text-align:center;}
+.lg-owl{width:84px;height:84px;margin:-72px auto 2px;display:block;}
+.lg-title{font-family:'Katahdin','Fredoka One',cursive;font-size:26px;color:#4A0080;letter-spacing:1px;}
+.lg-sub{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:12px;color:#757575;margin-top:2px;line-height:1.3;}
+.lg-input{width:100%;margin-top:12px;border:3px solid #CE93D8;border-radius:16px;padding:12px 14px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:17px;color:#3E2723;text-align:center;background:#fff;outline:none;}
+.lg-input:focus{border-color:#4A0080;}
+.lg-pin{-webkit-text-security:disc;letter-spacing:6px;}
+.lg-pin::placeholder{letter-spacing:0;-webkit-text-security:none;}
+.lg-err{min-height:18px;margin-top:8px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:12px;color:#C62828;line-height:1.3;}
+.lg-btn{margin-top:8px;width:100%;height:60px;border:none;cursor:pointer;background:transparent center/100% 100% no-repeat;font-family:'Katahdin','Fredoka One',cursive;font-size:22px;color:#fff;letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,.3);}
+.lg-btn:active{transform:scale(.97);}
+.lg-btn[disabled]{opacity:.6;}
+.lg-link{margin-top:14px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:13px;color:#C2185B;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.lg-foot{margin-top:10px;font-family:'RalewayG','Nunito',sans-serif;font-weight:600;font-size:11px;color:#9E9E9E;}
+.lg-stats{margin-top:14px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:14px;color:#3E2723;line-height:1.6;}
+.lg-stats b{color:#4A0080;}
 </style>
 </head>
 <body>
@@ -315,7 +335,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     <div class="cl cl1"></div><div class="cl cl2"></div><div class="cl cl3"></div>
     <div class="cl cl4"></div><div class="cl cl5"></div>
     <div class="hill h1"></div><div class="hill h2"></div>
-    <button class="gear" onclick="askName()" aria-label="Cambiar nombre">⚙️</button>
+    <button class="gear" onclick="openAccount()" aria-label="Tu jugador">⚙️</button>
     <img class="logo-img" id="iLogo" alt="Market Legends">
     <div class="owl-wrap owl-idle" id="owlMenu">
       <img class="owl-frame active" id="iOwl1" alt="">
@@ -435,14 +455,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     </div>
   </div>
 
-  <!-- NOMBRE DEL JUGADOR -->
-  <div class="nm-overlay" id="nmOverlay">
-    <div class="nm-card">
-      <img class="nm-owl" id="iNmOwl" alt="">
-      <div class="nm-title">¿CÓMO TE LLAMAS?</div>
-      <div class="nm-sub">Así aparecerás en el leaderboard</div>
-      <input class="nm-input" id="nmInput" maxlength="16" placeholder="Tu nombre" autocomplete="off" autocapitalize="words">
-      <button class="nm-btn" onclick="saveName()">LISTO</button>
+  <!-- ENTRAR / CREAR JUGADOR -->
+  <div class="screen" id="loginScreen">
+    <img class="bgimg" id="iBgLogin" alt="">
+    <button id="lgBack" onclick="goMenu()" aria-label="Menú">Menú</button>
+    <div class="lg-card" id="lgCard">
+      <img class="lg-owl" id="iLgOwl" alt="">
+      <div class="lg-title" id="lgTitle">ENTRAR</div>
+      <div class="lg-sub" id="lgSub">Tu apodo y tu PIN para competir en el Leaderboard</div>
+      <input class="lg-input" id="lgNick" maxlength="16" placeholder="Apodo" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input class="lg-input lg-pin" id="lgPin" type="tel" maxlength="4" placeholder="PIN (4 números)" autocomplete="current-password">
+      <input class="lg-input lg-pin" id="lgPin2" type="tel" maxlength="4" placeholder="Repite el PIN" autocomplete="new-password" style="display:none">
+      <div class="lg-err" id="lgErr"></div>
+      <button class="lg-btn" id="lgGo" onclick="lgSubmit()">JUGAR</button>
+      <div class="lg-link" id="lgToggle" onclick="lgMode(!lgNew)">¿Nuevo? Crea tu jugador</div>
+      <div class="lg-foot" id="lgFoot">¿Olvidaste tu PIN? Avísale al profe.</div>
+    </div>
+    <div class="lg-card" id="acCard" style="display:none">
+      <img class="lg-owl" id="iAcOwl" alt="">
+      <div class="lg-title" id="acName"></div>
+      <div class="lg-sub">Tu jugador en este teléfono</div>
+      <div class="lg-stats" id="acStats"></div>
+      <button class="lg-btn" id="acGo" onclick="goMenu(); startGame();">JUGAR</button>
+      <div class="lg-link" onclick="logout()">Cerrar sesión</div>
     </div>
   </div>
 
@@ -528,7 +563,12 @@ window.onload = function() {
   document.getElementById('iStar').src = ASSETS.sp_starburst;
   document.getElementById('iLbHead').src = ASSETS.sp_lb1;
   document.querySelector('.lb-card').style.backgroundImage = "url("+ASSETS.sp_lbframe+")";
-  document.querySelector('.nm-card').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  document.getElementById('iBgLogin').src = ASSETS.bg_purple;
+  document.getElementById('lgBack').style.backgroundImage = "url("+ASSETS.sp_home+")";
+  document.querySelectorAll('.lg-card').forEach(function(e){ e.style.backgroundImage = "url("+ASSETS.sp_optbox+")"; });
+  document.querySelectorAll('.lg-btn').forEach(function(e){ e.style.backgroundImage = "url("+ASSETS.btn_play+")"; });
+  document.getElementById('iLgOwl').src = ASSETS.owl_circle; document.getElementById('iAcOwl').src = ASSETS.owl_circle;
+  ['lgNick','lgPin','lgPin2'].forEach(function(id){ document.getElementById(id).addEventListener('keydown', function(ev){ if(ev.key==='Enter') lgSubmit(); }); });
   owlThink();
   renderCats();
   document.getElementById('iOwl1').src    = ASSETS.owl1;
@@ -545,9 +585,7 @@ window.onload = function() {
   document.getElementById('pBombIcon').src = ASSETS.pow_bomb;
   document.getElementById('pSkipIcon').src = ASSETS.pow_skip;
   document.getElementById('hIcon').src     = ASSETS.pow_bomb;
-  document.getElementById('iNmOwl').src   = ASSETS.owl_circle;
   pushScore();
-  document.getElementById('nmInput').addEventListener('keydown',function(e){ if(e.key==='Enter') saveName(); });
 };
 
 
@@ -664,7 +702,7 @@ function renderCats(){
 }
 
 function startGame() {
-  if(!playerName){ askName(startGame); return; }
+  if(!auth){ askName(startGame); return; }
   score=0; cur=0; roundNum++;
   powUsed={time:false,bomb:false,skip:false};
   ['pTime','pBomb','pSkip'].forEach(function(id){
@@ -818,15 +856,16 @@ function showResult(){
 // Mientras esté vacía, el leaderboard solo muestra los puntajes de este teléfono.
 const FIREBASE_DB_URL = 'https://market-legends-default-rtdb.firebaseio.com';
 
-var playerName = '', playerId = '';
+// ===== JUGADOR: cuenta real (apodo + PIN) con Firebase Authentication, por REST =====
+// Clave web del proyecto (Firebase > Configuración del proyecto > General > Clave de API web).
+const FIREBASE_API_KEY = 'AIzaSyAyumcYXVlXZN_JuhrT-Rm826xgMmdq6Ac';
+const AUTH_MAIL_SUFFIX = '@jugadores.marketlegends.app';   // el apodo se convierte en un correo interno
+var playerName = '', playerId = '', auth = null;
 try{
-  playerName = localStorage.getItem('ml_name') || '';
-  playerId   = localStorage.getItem('ml_uid')  || '';
-  if(!playerId){
-    playerId = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-    localStorage.setItem('ml_uid', playerId);
-  }
-}catch(e){}
+  auth = JSON.parse(localStorage.getItem('ml_auth') || 'null');
+  if(auth && auth.uid && auth.refreshToken){ playerName = auth.name || ''; playerId = auth.uid; } else auth = null;
+}catch(e){ auth = null; }
+function storeAuth(){ try{ if(auth) localStorage.setItem('ml_auth', JSON.stringify(auth)); else localStorage.removeItem('ml_auth'); }catch(e){} }
 
 function fbUrl(path){
   var base = FIREBASE_DB_URL.trim().replace(/\/+$/,'');
@@ -834,26 +873,120 @@ function fbUrl(path){
 }
 function hasFirebase(){ return /^https?:\/\//.test(FIREBASE_DB_URL.trim()); }
 
-// --- nombre del jugador (se pide una sola vez) ---
-var afterName = null;
-function askName(cb){
+// --- entrar / crear jugador ---
+var afterName = null, lgNew = false, lgBusy = false;
+function nickSlug(n){ return String(n).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+function lgErr(m){ document.getElementById('lgErr').textContent = m || ''; }
+function lgMode(n){
+  lgNew = !!n; lgErr('');
+  document.getElementById('lgTitle').textContent  = lgNew ? 'CREA TU JUGADOR' : 'ENTRAR';
+  document.getElementById('lgSub').textContent    = lgNew ? 'Elige un apodo (así te verán en el Leaderboard) y un PIN de 4 números' : 'Tu apodo y tu PIN para competir en el Leaderboard';
+  document.getElementById('lgPin2').style.display = lgNew ? '' : 'none';
+  document.getElementById('lgGo').textContent     = lgNew ? 'CREAR' : 'JUGAR';
+  document.getElementById('lgToggle').textContent = lgNew ? 'Ya tengo jugador' : '¿Nuevo? Crea tu jugador';
+  document.getElementById('lgFoot').style.display = lgNew ? 'none' : '';
+}
+function askName(cb){           // se llama al presionar JUGAR sin sesión
   afterName = cb || null;
-  var inp = document.getElementById('nmInput');
-  inp.value = playerName;
-  document.getElementById('nmOverlay').classList.add('active');
-  setTimeout(function(){ inp.focus(); }, 50);
+  clearInterval(tInt);
+  document.getElementById('lgCard').style.display = '';
+  document.getElementById('acCard').style.display = 'none';
+  document.getElementById('lgPin').value = ''; document.getElementById('lgPin2').value = '';
+  lgMode(false);
+  show('loginScreen');
+  setTimeout(function(){ document.getElementById('lgNick').focus(); }, 60);
 }
-function saveName(){
-  var v = document.getElementById('nmInput').value.replace(/\s+/g,' ').trim().slice(0,16);
-  if(!v){ document.getElementById('nmInput').focus(); return; }
-  playerName = v;
-  try{ localStorage.setItem('ml_name', v); }catch(e){}
-  document.getElementById('nmOverlay').classList.remove('active');
-  localBestUpdate(best);     // registra el nombre en la lista local
-  pushScore();               // si cambió de nombre, actualiza Firebase
-  var cb = afterName; afterName = null;
-  if(cb) cb();
+function openAccount(){          // engrane del menú
+  if(!auth){ askName(null); return; }
+  document.getElementById('lgCard').style.display = 'none';
+  document.getElementById('acCard').style.display = '';
+  document.getElementById('acName').textContent = playerName.toUpperCase();
+  document.getElementById('acStats').textContent = 'Mejor puntaje: ' + best.toLocaleString('es-MX') + ' pts.';
+  show('loginScreen');
 }
+function authMsg(code){
+  code = String(code || '');
+  if(/EMAIL_EXISTS/.test(code)) return 'Ese apodo ya existe. Elige otro o entra con tu PIN.';
+  if(/INVALID_LOGIN_CREDENTIALS|INVALID_PASSWORD|EMAIL_NOT_FOUND|USER_NOT_FOUND/.test(code)) return 'Apodo o PIN incorrecto.';
+  if(/TOO_MANY_ATTEMPTS/.test(code)) return 'Demasiados intentos. Espera un momento.';
+  if(/USER_DISABLED/.test(code)) return 'Este jugador está bloqueado. Habla con el profe.';
+  if(/API_KEY|API key/i.test(code)) return 'Falta configurar la clave de Firebase.';
+  if(/Failed to fetch|NetworkError|network|Load failed/i.test(code)) return 'Sin conexión. Intenta de nuevo.';
+  return 'No se pudo entrar (' + code.slice(0,40) + ').';
+}
+function fbAuth(method, body){
+  return fetch('https://identitytoolkit.googleapis.com/v1/accounts:' + method + '?key=' + FIREBASE_API_KEY, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+  }).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error((j.error && j.error.message) || 'ERROR'); return j; }); });
+}
+function setAuth(j, name, nick){
+  auth = { uid: j.localId, name: name, nick: nick, idToken: j.idToken, refreshToken: j.refreshToken,
+           exp: Date.now() + (parseInt(j.expiresIn,10) || 3600) * 1000 - 60000 };
+  storeAuth();
+  playerName = name; playerId = auth.uid;
+  best = 0; save();                                   // el mejor puntaje es de la cuenta, no del teléfono
+  try{ localStorage.removeItem('ml_synced'); }catch(e){}
+}
+function getToken(){            // Promise con un idToken vigente ('' si no hay sesión)
+  if(!auth) return Promise.resolve('');
+  if(Date.now() < auth.exp) return Promise.resolve(auth.idToken);
+  return fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_API_KEY, {
+    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'grant_type=refresh_token&refresh_token=' + encodeURIComponent(auth.refreshToken)
+  }).then(function(r){ return r.json(); }).then(function(j){
+    if(j.id_token){
+      auth.idToken = j.id_token; auth.refreshToken = j.refresh_token || auth.refreshToken;
+      auth.exp = Date.now() + (parseInt(j.expires_in,10) || 3600) * 1000 - 60000; storeAuth();
+      return auth.idToken;
+    }
+    var m = (j.error && j.error.message) || '';
+    if(/USER_NOT_FOUND|USER_DISABLED|INVALID_REFRESH_TOKEN|TOKEN_EXPIRED/.test(m)) logout(true);
+    return '';
+  }).catch(function(){ return ''; });
+}
+function lgSubmit(){
+  if(lgBusy) return;
+  var name = document.getElementById('lgNick').value.replace(/\s+/g,' ').trim().slice(0,16);
+  var nick = nickSlug(name), pin = document.getElementById('lgPin').value.trim(), pin2 = document.getElementById('lgPin2').value.trim();
+  if(nick.length < 3){ lgErr('El apodo necesita al menos 3 letras o números.'); return; }
+  if(!/^\d{4}$/.test(pin)){ lgErr('El PIN son 4 números.'); return; }
+  if(lgNew && pin2 !== pin){ lgErr('Los dos PIN no coinciden.'); return; }
+  if(!FIREBASE_API_KEY || FIREBASE_API_KEY.indexOf('__') === 0){ lgErr('Falta configurar la clave de Firebase.'); return; }
+  var email = nick + AUTH_MAIL_SUFFIX, pw = 'ML-' + pin + '-' + nick;
+  lgBusy = true; lgErr(''); var go = document.getElementById('lgGo'); go.disabled = true; go.textContent = '…';
+  var p = lgNew
+    ? fbAuth('signUp', {email:email, password:pw, returnSecureToken:true}).then(function(j){
+        return fbAuth('update', {idToken:j.idToken, displayName:name, returnSecureToken:false}).catch(function(){}).then(function(){ setAuth(j, name, nick); });
+      })
+    : fbAuth('signInWithPassword', {email:email, password:pw, returnSecureToken:true}).then(function(j){ setAuth(j, j.displayName || name, nick); });
+  p.then(function(){
+    return getToken().then(function(tok){
+      if(!tok) return;
+      fetch(fbUrl('users/' + playerId) + '?auth=' + tok, { method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({name:playerName, nick:auth.nick, t:Date.now()}) }).catch(function(){});
+      return syncBest(tok);
+    });
+  }).then(function(){
+    lgBusy = false; go.disabled = false; lgMode(false);
+    localBestUpdate(best); pushScore();
+    var cb = afterName; afterName = null;
+    if(cb) cb(); else goMenu();
+  }).catch(function(e){
+    lgBusy = false; go.disabled = false; go.textContent = lgNew ? 'CREAR' : 'JUGAR';
+    lgErr(authMsg(e && e.message));
+  });
+}
+function syncBest(tok){         // baja el mejor puntaje de la cuenta (por si jugó en otro teléfono)
+  return fetch(fbUrl('scores/' + playerId) + '?auth=' + tok).then(function(r){ return r.json(); }).then(function(v){
+    if(v && Number(v.score) > best){ best = Number(v.score); save(); }
+  }).catch(function(){});
+}
+function logout(silent){
+  auth = null; storeAuth(); playerName = ''; playerId = ''; best = 0; save();
+  try{ localStorage.removeItem('ml_synced'); }catch(e){}
+  if(!silent) goMenu();
+}
+if(auth){ getToken().then(function(tok){ if(tok) syncBest(tok).then(pushScore); }); }
 
 // --- puntajes locales (este teléfono): el mejor por jugador ---
 function localScores(){
@@ -869,19 +1002,22 @@ function localBestUpdate(s){
   try{ localStorage.setItem('ml_scores', JSON.stringify(list)); }catch(e){}
 }
 
-// --- Firebase: subir el mejor puntaje (solo si mejoró o cambió el nombre) ---
+// --- Firebase: subir el mejor puntaje (solo si mejoró o cambió el nombre), firmado con la sesión ---
 function pushScore(){
-  if(!hasFirebase() || !playerName || !best) return;
+  if(!hasFirebase() || !auth || !playerName || !best) return;
   var stamp = playerName + '|' + best;
   var done = '';
   try{ done = localStorage.getItem('ml_synced')||''; }catch(e){}
   if(done === stamp) return;
-  fetch(fbUrl('scores/'+playerId), {
-    method:'PUT',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({name:playerName, score:best, t:Date.now()})
-  }).then(function(r){
-    if(r.ok){ try{ localStorage.setItem('ml_synced', stamp); }catch(e){} }
+  getToken().then(function(tok){
+    if(!tok) return;
+    return fetch(fbUrl('scores/'+playerId) + '?auth=' + tok, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name:playerName, score:best, t:Date.now()})
+    }).then(function(r){
+      if(r.ok){ try{ localStorage.setItem('ml_synced', stamp); }catch(e){} }
+    });
   }).catch(function(){});
 }
 
@@ -918,7 +1054,7 @@ function showLeaderboard(){
       Object.keys(data).forEach(function(k){ var v = data[k]; if(v) rows.push({id:k, name:v.name, score:v.score}); });
     }
     // Si este teléfono aún no aparece en Firebase, lo mostramos igual.
-    if(playerName && !rows.some(function(r){ return r.id === playerId; })) rows.push({id:playerId, name:playerName, score:best});
+    if(auth && best && !rows.some(function(r){ return r.id === playerId; })) rows.push({id:playerId, name:playerName, score:best});
     renderRows(rows);
     st.textContent = 'Leaderboard global';
   }).catch(function(){
