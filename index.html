@@ -331,6 +331,33 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
   .desk-bg{display:block;}
   .phone{border-radius:46px;box-shadow:0 0 0 11px #17171c,0 0 0 13px #3b3b46,0 40px 90px rgba(0,0,0,.65);}
 }
+
+/* ===== MODO ARCADE: vidas, nivel, HI-SCORE, continuar ===== */
+.arc-row{width:92%;margin:6px auto 0;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:10;height:26px;}
+.lives{display:flex;gap:4px;align-items:center;}
+.life{width:24px;height:24px;border-radius:50%;transition:opacity .3s,transform .3s;}
+.life.lost{opacity:.22;filter:grayscale(1);transform:scale(.85);}
+.life.new{animation:lifePop .5s ease;}
+@keyframes lifePop{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+.hi{font-family:'Katahdin','Fredoka One',cursive;font-size:13px;color:#FFD54F;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%;}
+.hi.mine{color:#69F0AE;}
+.lvl-tag{white-space:nowrap;font-family:'Katahdin','Fredoka One',cursive;font-size:14px;color:#fff;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.5);}
+.menu-hi{position:relative;z-index:10;margin-top:8px;font-family:'Katahdin','Fredoka One',cursive;font-size:15px;color:#fff;letter-spacing:1px;text-shadow:0 2px 0 rgba(0,0,0,.25);}
+.menu-hi b{color:#FFD54F;}
+.rs-info{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:14px;color:#fff;margin-top:4px;position:relative;z-index:5;letter-spacing:.5px;}
+.rs-record{font-family:'Katahdin','Fredoka One',cursive;font-size:22px;color:#FFD54F;margin-top:6px;position:relative;z-index:5;letter-spacing:2px;text-shadow:0 3px 8px rgba(0,0,0,.4);animation:recordBlink 1s steps(2) infinite;}
+@keyframes recordBlink{to{opacity:.35}}
+.ct-overlay{position:absolute;inset:0;z-index:300;background:rgba(20,0,40,.86);display:none;align-items:center;justify-content:center;padding:24px;}
+.ct-overlay.active{display:flex;}
+.ct-card{width:100%;background:transparent center/100% 100% no-repeat;padding:30px 24px 26px;text-align:center;}
+.ct-title{font-family:'Katahdin','Fredoka One',cursive;font-size:30px;color:#4A0080;letter-spacing:2px;}
+.ct-count{font-family:'Katahdin','Fredoka One',cursive;font-size:72px;color:#C62828;line-height:1;margin:6px 0 2px;}
+.ct-sub{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:14px;color:#616161;line-height:1.4;}
+.ct-sub b{color:#3E2723;}
+.ct-btn{margin-top:14px;width:100%;height:60px;border:none;cursor:pointer;background:transparent center/100% 100% no-repeat;font-family:'Katahdin','Fredoka One',cursive;font-size:22px;color:#fff;letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,.3);}
+.ct-btn:active{transform:scale(.97);}
+.ct-no{margin-top:14px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:14px;color:#C2185B;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.qtxt,.ans,.txt{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 </style>
 </head>
 <body>
@@ -355,6 +382,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     <button class="jugar-btn" onclick="startGame()">JUGAR</button>
     <div class="cat-row" id="catRow"></div>
     <div class="cat-hint" id="catHint"></div>
+    <div class="menu-hi" id="menuHi"></div>
   </div>
 
   <!-- ROUND INTRO -->
@@ -389,7 +417,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
         <span class="snum" id="sDisplay">0</span>
       </div>
       <div class="owl-anim" id="owlAnim"><div class="sp" id="owlSp"></div></div>
-      <div class="cpill"><img class="coin-ic" id="iCoin1" alt=""><span class="cnum" id="cDisplay">149</span></div>
+      <div class="cpill"><img class="coin-ic" id="iCoin1" alt=""><span class="cnum" id="cDisplay">100</span></div>
+    </div>
+    <div class="arc-row">
+      <div class="lives" id="lives"></div>
+      <div class="lvl-tag" id="lvlTag">NIVEL 1</div>
+      <div class="hi" id="hiLine"></div>
     </div>
     <div class="qwrap">
       <div class="qcard">
@@ -409,21 +442,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
           <img class="pow-bg" id="pTimeBg" alt="">
           <img class="pow-icon" id="pTimeIcon" alt="">
         </div>
-        <span class="pow-cost">⭐5</span>
+        <span class="pow-cost">⭐20</span>
       </button>
       <button class="pow" id="pBomb" onclick="usePow('bomb')">
         <div class="pow-inner">
           <img class="pow-bg" id="pBombBg" alt="">
           <img class="pow-icon" id="pBombIcon" alt="">
         </div>
-        <span class="pow-cost">⭐15</span>
+        <span class="pow-cost">⭐40</span>
       </button>
       <button class="pow" id="pSkip" onclick="usePow('skip')">
         <div class="pow-inner">
           <img class="pow-bg" id="pSkipBg" alt="">
           <img class="pow-icon" id="pSkipIcon" alt="">
         </div>
-        <span class="pow-cost">⭐30</span>
+        <span class="pow-cost">⭐60</span>
       </button>
     </div>
   </div>
@@ -433,12 +466,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     <img class="bgimg" id="iBgResult" alt="">
     <img class="starburst" id="iStar" alt="">
     <div class="rcrow"><img class="coin-ic" id="iCoin2" alt=""><span class="cnum" id="rCoins">149</span></div>
-    <div class="rslbl">TU SCORE</div>
+    <div class="rslbl" id="rsTitle">GAME OVER</div>
     <div class="medalw">
       <img class="medimg" id="iMedal" alt="">
       <div class="medover"><span class="medscore" id="fScore">0</span></div>
     </div>
     <div class="bestlbl" id="bestLbl">MEJOR: 0</div>
+    <div class="rs-info" id="rsInfo"></div>
+    <div class="rs-record" id="rsRecord" style="display:none">¡NUEVO RÉCORD!</div>
     <div class="hintrow">
       <div class="hicon-wrap">
         <img class="hicon-bg" id="hBg" alt="">
@@ -491,6 +526,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     </div>
   </div>
 
+  <div class="ct-overlay" id="ctOverlay">
+    <div class="ct-card" id="ctCard">
+      <div class="ct-title">¿CONTINUAR?</div>
+      <div class="ct-count" id="ctCount">9</div>
+      <div class="ct-sub">Perdiste tus 3 vidas.<br>Sigue con una vida por <b>50 monedas</b>.</div>
+      <button class="ct-btn" id="ctYes" onclick="contYes()">CONTINUAR</button>
+      <div class="ct-no" onclick="contNo()">No, terminar</div>
+    </div>
+  </div>
   <div class="cpop" id="cpop">+100 ⭐</div>
 </div>
 <script>
@@ -539,18 +583,29 @@ const ALL_Q = [{"q": "¿Qué mide la beta de un activo?", "opts": ["Su sensibili
 const CATS={1:'PORTAFOLIOS',2:'ESTADÍSTICA',3:'MACROECONOMÍA',
   4:'ÉTICA',5:'COBERTURA',6:'VEHÍCULOS DE INVERSIÓN'};
 
-let score=0,coins=149,best=0,cur=0,tL=15,tInt=null,answered=false,roundNum=0;
-try{ coins=parseInt(localStorage.getItem('ml_coins'))||149; best=parseInt(localStorage.getItem('ml_best'))||0; }catch(e){}
+let score=0,coins=100,best=0,cur=0,tL=15,tInt=null,answered=false,roundNum=0;
+// ----- modo arcade -----
+const ARC = { times:[15,13,11,9,8], mult:[1,1.5,2,3,4], perLevel:5, lives:3, maxLives:5, contCost:50, bonusLifeAt:5000, maxQ:25, finishBonus:500, lifeBonus:250 };
+let lives=3, level=1, tMax=15, contUsed=false, bonusGiven=false, newRecord=false, hits=0, ctInt=null;
+var hi = {score:0, name:''};   // HI-SCORE global (tope del leaderboard)
+try{ coins=parseInt(localStorage.getItem('ml_coins'))||100; best=parseInt(localStorage.getItem('ml_best'))||0; }catch(e){}
 function save(){ try{ localStorage.setItem('ml_coins',coins); localStorage.setItem('ml_best',best); }catch(e){} }
 let powUsed={time:false,bomb:false,skip:false},rQ=[];
 
 // ===== ESCALA: la pantalla de 390x844 cabe en cualquier ventana =====
 function fitPhone(){
-  var w=window.innerWidth, h=window.innerHeight;
+  var w=window.innerWidth, h=window.innerHeight; if(!w||!h) return;
   var sc=Math.min(w/390, h/844);
-  if(window.matchMedia("(min-width:700px) and (pointer:fine)").matches) sc*=0.9;   // PC (pantalla ancha + mouse): aire para el marco
+  var ph=document.querySelector('.phone');
+  if(window.matchMedia("(min-width:700px) and (pointer:fine)").matches){
+    sc*=0.9; ph.style.width='390px'; ph.style.height='844px';   // PC: telefono con marco
+  } else {
+    // celular/tablet: el juego llena toda la pantalla (sin franjas), el lienzo se ensancha o alarga lo necesario
+    ph.style.width=Math.round(w/sc)+'px'; ph.style.height=Math.round(h/sc)+'px';
+  }
   document.documentElement.style.setProperty('--s', sc.toFixed(4));
 }
+document.addEventListener('visibilitychange', function(){ if(!document.hidden && tInt && !answered){ tL=Math.max(0,(tEnd-Date.now())/1000); tick(); if(tL<=0){ clearInterval(tInt); timeUp(); } } });
 fitPhone(); window.addEventListener('resize', fitPhone); window.addEventListener('orientationchange', fitPhone);
 
 // ===== IMAGE SETUP =====
@@ -565,6 +620,9 @@ window.onload = function() {
   document.querySelector('.gear').style.backgroundImage = "url("+ASSETS.btn_gear+")";
   document.querySelector('.jugar-btn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('iCoin1').src = ASSETS.sp_coins; document.getElementById('iCoin2').src = ASSETS.sp_coins;
+  document.getElementById('ctCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  document.getElementById('ctYes').style.backgroundImage = "url("+ASSETS.btn_play+")";
+  loadHi();
   document.querySelectorAll('.spill,.cpill,.rcrow').forEach(function(e){ e.style.backgroundImage = "url("+ASSETS.sp_capsule+")"; });
   document.querySelector('.tbg').style.backgroundImage = "url("+ASSETS.sp_track+")";
   document.getElementById('iTimeline').src = ASSETS.sp_timeline;
@@ -688,7 +746,7 @@ function show(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
 }
-function goMenu(){clearInterval(tInt); show('menuScreen');}
+function goMenu(){clearInterval(tInt); clearInterval(ctInt); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
 
 // ===== GAME FLOW =====
 // ===== CATEGORIA DE LA SEMANA (selector del menu) =====
@@ -715,23 +773,56 @@ function renderCats(){
 
 function startGame() {
   if(!auth){ askName(startGame); return; }
-  score=0; cur=0; roundNum++;
+  score=0; cur=0; hits=0; lives=ARC.lives; level=0; contUsed=false; bonusGiven=false; newRecord=false;
   powUsed={time:false,bomb:false,skip:false};
   ['pTime','pBomb','pSkip'].forEach(function(id){
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  rQ = shuffle(catPool(selCat)).slice(0,10);
+  rQ = shuffle(catPool(selCat)).slice(0, ARC.maxQ);   // arcade: 25 preguntas = 5 niveles, o hasta perder las vidas
+  renderLives(); renderHi();
+  loadQ();
+}
+function levelOf(i){ return Math.min(ARC.times.length, Math.floor(i/ARC.perLevel)+1); }
+function showLevel(cb){
   var cat = selCat ? CATS[selCat] : 'TRIVIA';
-  document.getElementById('roundLbl').textContent   = 'ROUND ' + roundNum;
+  document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
-  document.getElementById('roundBonus').textContent = 'BONIFICACIÓN DE TIEMPO +5';
+  document.getElementById('roundBonus').textContent = tMax + ' SEGUNDOS · PUNTOS x' + ARC.mult[level-1];
+  document.getElementById('lvlTag').textContent     = 'NIVEL ' + level;
   show('roundScreen');
-  setTimeout(function(){ show('gameScreen'); loadQ(); }, 2400);
+  setTimeout(function(){ show('gameScreen'); cb(); }, level===1 ? 2200 : 1700);
+}
+function renderLives(){
+  var el = document.getElementById('lives'); el.innerHTML='';
+  var n = Math.max(lives, ARC.lives);
+  for(var i=0;i<n;i++){
+    var im = document.createElement('img'); im.className = 'life' + (i<lives ? '' : ' lost');
+    im.src = ASSETS.owl_circle; im.alt=''; el.appendChild(im);
+  }
+}
+function fmtN(n){ return Number(n||0).toLocaleString('es-MX'); }
+function renderHi(){
+  var el = document.getElementById('hiLine');
+  if(newRecord || (auth && score>0 && score>=hi.score && hi.score>0)){ el.className='hi mine'; el.textContent = 'HI ' + fmtN(Math.max(score,hi.score)) + ' · ' + (playerName||'').toUpperCase().slice(0,10); }
+  else if(hi.score){ el.className='hi'; el.textContent = 'HI ' + fmtN(hi.score) + ' · ' + String(hi.name||'').toUpperCase().slice(0,10); }
+  else { el.className='hi'; el.textContent = 'HI ---'; }
+  var m = document.getElementById('menuHi');
+  if(m) m.innerHTML = hi.score ? 'RÉCORD: <b>' + fmtN(hi.score) + '</b> · ' + String(hi.name||'').replace(/[<>&"]/g,'').toUpperCase().slice(0,16) : '';
+}
+function loadHi(){
+  if(!hasFirebase()) return;
+  fetch(fbUrl('scores')).then(function(r){ return r.json(); }).then(function(data){
+    var top = {score:0, name:''};
+    if(data && typeof data==='object') Object.keys(data).forEach(function(k){ var v=data[k]; if(v && Number(v.score)>top.score){ top={score:Number(v.score), name:v.name||''}; } });
+    hi = top; renderHi();
+  }).catch(function(){});
 }
 
 function loadQ() {
-  if(cur >= rQ.length){ showResult(); return; }
+  if(cur >= rQ.length){ score += ARC.finishBonus + ARC.lifeBonus*lives; showResult(true); return; }   // llegó al final con vidas
+  var lv = levelOf(cur);
+  if(lv !== level){ level = lv; tMax = ARC.times[level-1]; showLevel(loadQ); return; }
   answered = false;
   owlThink();
   powUsed={time:false,bomb:false,skip:false};
@@ -751,22 +842,23 @@ function loadQ() {
 }
 
 // ===== TIMER =====
+var tEnd=0;
 function startTimer(){
-  clearInterval(tInt); tL=15;
+  clearInterval(tInt); tL=tMax; tEnd=Date.now()+tMax*1000;   // reloj real: cambiar de app no lo detiene
   var tw=document.querySelector('.twrap'); var ti=document.getElementById('iTimeline'); if(tw&&ti) ti.style.width=tw.clientWidth+'px';
   tick();
   tInt = setInterval(function(){
-    tL = Math.max(0, tL - 0.1);
+    tL = Math.max(0, (tEnd-Date.now())/1000);
     tick();
     if(tL <= 0){ clearInterval(tInt); timeUp(); }
   }, 100);
 }
 function tick(){
-  var p = (tL/15)*100;
+  var p = (tL/tMax)*100;
   var fill = document.getElementById('tFill');
   fill.style.width = p + '%';
-  fill.style.background = tL>8 ? 'linear-gradient(90deg,#FF5722,#FF8F00)' :
-    tL>4 ? 'linear-gradient(90deg,#E53935,#FF5722)' : 'linear-gradient(90deg,#B71C1C,#E53935)';
+  fill.style.background = tL>tMax*.55 ? 'linear-gradient(90deg,#FF5722,#FF8F00)' :
+    tL>tMax*.27 ? 'linear-gradient(90deg,#E53935,#FF5722)' : 'linear-gradient(90deg,#B71C1C,#E53935)';
   document.getElementById('tNum').textContent = tL.toFixed(2);
 }
 function timeUp(){
@@ -780,7 +872,7 @@ function timeUp(){
   });
   owlReact(false);
   owlWrong();
-  setTimeout(next, 1600);
+  loseLife();
 }
 
 // ===== ANSWER =====
@@ -792,33 +884,71 @@ function pick(idx, ci){
   if(idx === ci){
     document.getElementById('a'+idx).classList.add('correct');
     glowButton(document.getElementById('a'+idx), true); owlReact(true);
-    var pts = Math.round(10 + tL*8);
-    score += pts; coins += 5;
+    var pts = Math.round((100 + tL*5) * ARC.mult[level-1]);
+    score += pts; coins += 10; hits++;
     document.getElementById('sDisplay').textContent = score;
     document.getElementById('cDisplay').textContent = coins;
     showC('+'+pts+' ⭐');
     owlCelebrate();
+    if(!bonusGiven && score >= ARC.bonusLifeAt && lives < ARC.maxLives){ bonusGiven = true; lives++; renderLives(); var ls=document.querySelectorAll('.life'); if(ls[lives-1]) ls[lives-1].classList.add('new'); setTimeout(function(){ showC('¡VIDA EXTRA!'); }, 900); }
+    if(hi.score && score > hi.score && !newRecord){ newRecord = true; setTimeout(function(){ showC('¡NUEVO RÉCORD!'); }, 900); }
+    if(!hi.score && score>0 && !newRecord){ newRecord = true; }
+    renderHi();
+    setTimeout(next, 1600);
+    return;
   } else {
     document.getElementById('a'+idx).classList.add('wrong');
     document.getElementById('a'+ci).classList.add('correct');
     glowButton(document.getElementById('a'+idx), false); glowButton(document.getElementById('a'+ci), true); owlReact(false);
     owlWrong();
+    loseLife();
   }
-  setTimeout(next, 1600);
 }
 function next(){ cur++; loadQ(); }
+function loseLife(){
+  lives--; renderLives();
+  setTimeout(function(){
+    if(lives > 0){ next(); return; }
+    if(!contUsed && coins >= ARC.contCost){ showContinue(); return; }
+    showResult(false);
+  }, 1600);
+}
+// ----- ¿Continuar? (el "insert coin" de las maquinitas, con monedas del juego) -----
+var ctLeft = 9;
+function showContinue(){
+  ctLeft = 9; document.getElementById('ctCount').textContent = ctLeft;
+  document.getElementById('ctOverlay').classList.add('active');
+  clearInterval(ctInt);
+  ctInt = setInterval(function(){
+    ctLeft--; document.getElementById('ctCount').textContent = Math.max(0,ctLeft);
+    if(ctLeft <= 0){ contNo(); }
+  }, 1000);
+}
+function contYes(){
+  clearInterval(ctInt);
+  if(coins < ARC.contCost){ contNo(); return; }
+  coins -= ARC.contCost; save(); contUsed = true; lives = 1; renderLives();
+  document.getElementById('cDisplay').textContent = coins;
+  document.getElementById('ctOverlay').classList.remove('active');
+  next();
+}
+function contNo(){
+  clearInterval(ctInt);
+  document.getElementById('ctOverlay').classList.remove('active');
+  showResult(false);
+}
 
 // ===== POWERUPS =====
 function usePow(t){
   if(answered) return;
   var nombre = {time:'el reloj', bomb:'la bomba', skip:'el salto'}[t];
   if(powUsed[t]){ showC('Ya usaste '+nombre+' aquí'); return; }
-  var cost = {time:5, bomb:15, skip:30};
+  var cost = {time:20, bomb:40, skip:60};
   if(coins < cost[t]){ showC('Faltan monedas: '+nombre+' cuesta '+cost[t]+' ⭐'); return; }
   powUsed[t] = true; coins -= cost[t]; save();
   document.getElementById('cDisplay').textContent = coins;
   document.getElementById({time:'pTime',bomb:'pBomb',skip:'pSkip'}[t]).style.opacity = '.35';
-  if(t==='time'){ tL = Math.min(15, tL+8); }
+  if(t==='time'){ tL = Math.min(tMax, tL+8); tEnd = Date.now()+tL*1000; }
   if(t==='bomb'){
     var btns = [...document.querySelectorAll('.ans')];
     var wrongs = shuffle(btns.filter(function(b){
@@ -840,9 +970,14 @@ function showC(txt){
 }
 
 // ===== RESULT =====
-function showResult(){
-  clearInterval(tInt);
-  coins += 15;
+function showResult(dominated){
+  clearInterval(tInt); clearInterval(ctInt);
+  coins += 30;
+  document.getElementById('rsTitle').textContent = dominated ? '¡RONDA COMPLETA!' : 'GAME OVER';
+  document.getElementById('rsInfo').textContent  = 'NIVEL ' + level + ' · ' + hits + ' ACIERTOS DE ' + cur;
+  var rec = newRecord && score > 0 && score >= hi.score;
+  document.getElementById('rsRecord').style.display = rec ? '' : 'none';
+  if(rec){ hi = {score:score, name:playerName}; renderHi(); }
   if(score > best) best = score;
   save();
   localBestUpdate(score);
@@ -853,6 +988,7 @@ function showResult(){
   var hints = [
     {t:'PISTA: USA LA BOMBA PARA ELIMINAR 2 OPCIONES INCORRECTAS', ic:'pow_bomb'},
     {t:'PISTA: USA EL RELOJ PARA GANAR MÁS TIEMPO',               ic:'pow_clock'},
+    {t:'PISTA: A LOS 5,000 PUNTOS GANAS UNA VIDA EXTRA',          ic:'pow_clock'},
     {t:'PISTA: USA LA FLECHA PARA SALTAR UNA PREGUNTA',           ic:'pow_skip'},
   ];
   var h = hints[Math.floor(Math.random()*hints.length)];
@@ -1068,6 +1204,8 @@ function showLeaderboard(){
     // Si este teléfono aún no aparece en Firebase, lo mostramos igual.
     if(auth && best && !rows.some(function(r){ return r.id === playerId; })) rows.push({id:playerId, name:playerName, score:best});
     renderRows(rows);
+    var top = rows.slice().sort(function(a,b){ return (b.score||0)-(a.score||0); })[0];
+    if(top && top.score){ hi = {score:Number(top.score), name:top.name||''}; renderHi(); }
     st.textContent = 'Leaderboard global';
   }).catch(function(){
     st.textContent = 'Sin conexión: puntajes de este teléfono';
