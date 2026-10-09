@@ -358,6 +358,35 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .ct-btn:active{transform:scale(.97);}
 .ct-no{margin-top:14px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:14px;color:#C2185B;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
 .qtxt,.ans,.txt{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+
+/* ===== TORNEO DE LA SEMANA + MODO PROFESOR ===== */
+.tor-btn{position:relative;z-index:10;width:88%;margin:10px auto 0;height:60px;border:none;cursor:pointer;display:none;
+  background:transparent center/100% 100% no-repeat;font-family:'Katahdin','Fredoka One',cursive;font-size:18px;color:#fff;
+  letter-spacing:1px;text-shadow:0 2px 0 rgba(0,0,0,.25);flex-direction:column;align-items:center;justify-content:center;line-height:1.1;
+  filter:hue-rotate(215deg) saturate(.9) brightness(.95);}
+.tor-btn.on{display:flex;}
+.tor-btn small{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;opacity:.95;margin-top:2px;}
+.tor-btn:active{transform:scale(.97);}
+.tor-btn.done{filter:grayscale(.6) brightness(.9);}
+#profScreen{background:#3E1C63;align-items:center;justify-content:flex-start;}
+#pfBack{position:absolute;top:14px;left:14px;z-index:20;width:54px;height:42px;border:none;background:transparent center/100% 100% no-repeat;font-size:0;cursor:pointer;}
+.pf-title{font-family:'Katahdin','Fredoka One',cursive;font-size:28px;color:#fff;letter-spacing:3px;margin-top:64px;position:relative;z-index:5;text-shadow:0 3px 10px rgba(0,0,0,.3);}
+.pf-card{position:relative;z-index:5;width:92%;margin-top:14px;padding:26px 22px 22px;background:transparent center/100% 100% no-repeat;text-align:center;}
+.pf-lbl{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:12px;color:#616161;letter-spacing:1px;text-transform:uppercase;margin:6px 0 8px;}
+.pf-row{display:flex;flex-wrap:wrap;justify-content:center;gap:7px 6px;}
+.pf-row .cat-btn{min-width:64px;}
+.pf-go{margin-top:16px;width:100%;height:62px;border:none;cursor:pointer;background:transparent center/100% 100% no-repeat;font-family:'Katahdin','Fredoka One',cursive;font-size:22px;color:#fff;letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,.3);}
+.pf-go:active{transform:scale(.97);}
+.pf-go.close{filter:hue-rotate(300deg) saturate(1.2);}
+.pf-state{margin-top:12px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:13px;color:#3E2723;line-height:1.5;}
+.pf-state b{color:#C2185B;}
+.pf-err{min-height:16px;margin-top:6px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:12px;color:#C62828;}
+.lb-tabs{display:flex;gap:8px;justify-content:center;margin:-4px 0 8px;}
+.lb-tab{font-family:'Katahdin','Fredoka One',cursive;font-size:14px;letter-spacing:1px;color:#9E9E9E;background:none;border:none;border-bottom:3px solid transparent;padding:4px 10px;cursor:pointer;}
+.lb-tab.on{color:#4A0080;border-bottom-color:#4A0080;}
+.lb-tab.hide{display:none;}
+.ac-prof{margin-top:10px;width:100%;height:52px;border:none;cursor:pointer;background:transparent center/100% 100% no-repeat;font-family:'Katahdin','Fredoka One',cursive;font-size:17px;color:#fff;letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,.3);filter:hue-rotate(230deg) saturate(1.1);display:none;}
+.ac-prof.on{display:block;}
 </style>
 </head>
 <body>
@@ -380,6 +409,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <img class="owl-frame" id="iOwl3" alt="">
     </div>
     <button class="jugar-btn" onclick="startGame()">JUGAR</button>
+    <button class="tor-btn" id="torBtn" onclick="startTorneo()">TORNEO<small id="torSub"></small></button>
     <div class="cat-row" id="catRow"></div>
     <div class="cat-hint" id="catHint"></div>
     <div class="menu-hi" id="menuHi"></div>
@@ -495,8 +525,34 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     <button class="lb-back" onclick="goMenu()" aria-label="Menú">🏠</button>
     <div class="lb-head"><img id="iLbHead" alt=""><div class="lb-title">LEADERBOARD</div></div>
     <div class="lb-card">
+      <div class="lb-tabs"><button class="lb-tab on" id="lbTabG" onclick="lbTab('global')">GLOBAL</button><button class="lb-tab hide" id="lbTabT" onclick="lbTab('torneo')">TORNEO</button></div>
       <div class="lb-list" id="lbList"></div>
       <div class="lb-status" id="lbStatus"></div>
+    </div>
+  </div>
+
+  <!-- MODO PROFESOR -->
+  <div class="screen" id="profScreen">
+    <img class="bgimg" id="iBgProf" alt="">
+    <button id="pfBack" onclick="goMenu()" aria-label="Menú">Menú</button>
+    <div class="pf-title">MODO PROFESOR</div>
+    <div class="pf-card" id="pfCard">
+      <div id="pfOpen">
+        <div class="pf-lbl">Categoría del torneo</div>
+        <div class="pf-row" id="pfCats"></div>
+        <div class="pf-lbl" style="margin-top:14px">Cierra en</div>
+        <div class="pf-row" id="pfDur"></div>
+        <div class="pf-err" id="pfErr"></div>
+        <button class="pf-go" id="pfGo" onclick="profAbrir()">ABRIR TORNEO</button>
+      </div>
+      <div id="pfLive" style="display:none">
+        <div class="pf-lbl">Torneo abierto</div>
+        <div class="pf-state" id="pfState"></div>
+        <div class="pf-err" id="pfErr2"></div>
+        <button class="pf-go" onclick="showLeaderboard('torneo')">VER TABLA</button>
+        <button class="pf-go close" id="pfClose" onclick="profCerrar()">CERRAR TORNEO</button>
+      </div>
+      <div class="pf-state" id="pfLast"></div>
     </div>
   </div>
 
@@ -522,6 +578,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <div class="lg-sub">Tu jugador en este teléfono</div>
       <div class="lg-stats" id="acStats"></div>
       <button class="lg-btn" id="acGo" onclick="goMenu(); startGame();">JUGAR</button>
+      <button class="ac-prof" id="acProf" onclick="openProf()">MODO PROFESOR</button>
       <div class="lg-link" onclick="logout()">Cerrar sesión</div>
     </div>
   </div>
@@ -588,6 +645,12 @@ let score=0,coins=100,best=0,cur=0,tL=15,tInt=null,answered=false,roundNum=0;
 const ARC = { times:[15,13,11,9,8], mult:[1,1.5,2,3,4], perLevel:5, lives:3, maxLives:5, contCost:50, bonusLifeAt:5000, maxQ:25, finishBonus:500, lifeBonus:250 };
 let lives=3, level=1, tMax=15, contUsed=false, bonusGiven=false, newRecord=false, hits=0, ctInt=null;
 var hi = {score:0, name:''};   // HI-SCORE global (tope del leaderboard)
+// ----- torneo de la semana -----
+const PROF_UID = '__PROF_UID__';          // uid de Firebase de la cuenta del profe (Leonel)
+var torneo = null;                        // {id, cat, abre, cierra, titulo} desde /torneo/actual
+var torMode = false;                      // la partida en curso es del torneo
+var torPlayed = null;                     // mi puntaje ya registrado en el torneo actual
+var lbView = 'global';
 try{ coins=parseInt(localStorage.getItem('ml_coins'))||100; best=parseInt(localStorage.getItem('ml_best'))||0; }catch(e){}
 function save(){ try{ localStorage.setItem('ml_coins',coins); localStorage.setItem('ml_best',best); }catch(e){} }
 let powUsed={time:false,bomb:false,skip:false},rQ=[];
@@ -621,6 +684,13 @@ window.onload = function() {
   document.querySelector('.jugar-btn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('iCoin1').src = ASSETS.sp_coins; document.getElementById('iCoin2').src = ASSETS.sp_coins;
   document.getElementById('ctCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  document.getElementById('torBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
+  document.getElementById('acProf').style.backgroundImage = "url("+ASSETS.btn_play+")";
+  document.getElementById('iBgProf').src = ASSETS.bg_purple;
+  document.getElementById('pfBack').style.backgroundImage = "url("+ASSETS.sp_home+")";
+  document.getElementById('pfCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  document.querySelectorAll('.pf-go').forEach(function(e){ e.style.backgroundImage = "url("+ASSETS.btn_play+")"; });
+  loadTorneo();
   document.getElementById('ctYes').style.backgroundImage = "url("+ASSETS.btn_play+")";
   loadHi();
   document.querySelectorAll('.spill,.cpill,.rcrow').forEach(function(e){ e.style.backgroundImage = "url("+ASSETS.sp_capsule+")"; });
@@ -746,7 +816,7 @@ function show(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
 }
-function goMenu(){clearInterval(tInt); clearInterval(ctInt); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
+function goMenu(){clearInterval(tInt); clearInterval(ctInt); torMode=false; renderTorneo(); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
 
 // ===== GAME FLOW =====
 // ===== CATEGORIA DE LA SEMANA (selector del menu) =====
@@ -773,6 +843,7 @@ function renderCats(){
 
 function startGame() {
   if(!auth){ askName(startGame); return; }
+  if(!torMode) renderCats();
   score=0; cur=0; hits=0; lives=ARC.lives; level=0; contUsed=false; bonusGiven=false; newRecord=false;
   powUsed={time:false,bomb:false,skip:false};
   ['pTime','pBomb','pSkip'].forEach(function(id){
@@ -982,6 +1053,8 @@ function showResult(dominated){
   save();
   localBestUpdate(score);
   pushScore();
+  if(torMode){ pushTorneo(); document.getElementById('rsTitle').textContent = 'TORNEO: ' + document.getElementById('rsTitle').textContent; }
+  torMode = false;
   document.getElementById('fScore').textContent  = score;
   document.getElementById('bestLbl').textContent = 'MEJOR: ' + best;
   document.getElementById('rCoins').textContent  = coins;
@@ -1050,6 +1123,7 @@ function openAccount(){          // engrane del menú
   document.getElementById('acCard').style.display = '';
   document.getElementById('acName').textContent = playerName.toUpperCase();
   document.getElementById('acStats').textContent = 'Mejor puntaje: ' + best.toLocaleString('es-MX') + ' pts.';
+  document.getElementById('acProf').className = 'ac-prof' + (isProf() ? ' on' : '');
   show('loginScreen');
 }
 function authMsg(code){
@@ -1169,6 +1243,123 @@ function pushScore(){
   }).catch(function(){});
 }
 
+// ===== TORNEO DE LA SEMANA =====
+function isProf(){ return !!(auth && PROF_UID && PROF_UID.indexOf('__')!==0 && auth.uid === PROF_UID); }
+function torOpen(){ return !!(torneo && torneo.id && Date.now() < torneo.cierra); }
+function fmtFecha(t){
+  var d = new Date(t), dias=['dom','lun','mar','mié','jue','vie','sáb'];
+  var h = d.getHours(), m = d.getMinutes(), ap = h>=12?'pm':'am'; h = h%12 || 12;
+  return dias[d.getDay()] + ' ' + d.getDate() + ', ' + h + ':' + (m<10?'0':'') + m + ' ' + ap;
+}
+function loadTorneo(){
+  if(!hasFirebase()) return;
+  fetch(fbUrl('torneo/actual')).then(function(r){ return r.json(); }).then(function(t){
+    torneo = (t && t.id) ? t : null;
+    renderTorneo();
+    if(torneo && auth){
+      fetch(fbUrl('torneo/' + torneo.id + '/scores/' + playerId)).then(function(r){ return r.json(); }).then(function(v){ torPlayed = (v && v.score!=null) ? v : null; renderTorneo(); }).catch(function(){});
+    }
+  }).catch(function(){});
+}
+function renderTorneo(){
+  var b = document.getElementById('torBtn'), sub = document.getElementById('torSub');
+  var tabT = document.getElementById('lbTabT');
+  if(!torneo || !torneo.id){ b.className = 'tor-btn'; if(tabT) tabT.classList.add('hide'); return; }
+  if(tabT) tabT.classList.remove('hide');
+  var cat = CATS[torneo.cat] || '';
+  if(torOpen()){
+    b.className = 'tor-btn on' + (torPlayed ? ' done' : '');
+    sub.textContent = torPlayed ? (cat + ' · ya jugaste: ' + fmtN(torPlayed.score) + ' pts') : (cat + ' · cierra ' + fmtFecha(torneo.cierra) + ' · 1 intento');
+  } else {
+    b.className = 'tor-btn on done';
+    sub.textContent = cat + ' · cerrado · ver tabla';
+  }
+}
+function startTorneo(){
+  if(!torneo) return;
+  if(!torOpen() || torPlayed){ showLeaderboard('torneo'); return; }
+  if(!auth){ askName(startTorneo); return; }
+  // volver a verificar en Firebase que no haya jugado (otro teléfono)
+  fetch(fbUrl('torneo/' + torneo.id + '/scores/' + playerId)).then(function(r){ return r.json(); }).then(function(v){
+    if(v && v.score!=null){ torPlayed = v; renderTorneo(); showLeaderboard('torneo'); return; }
+    torMode = true; selCat = torneo.cat; startGame();
+  }).catch(function(){ showC('Sin conexión'); });
+}
+function pushTorneo(){
+  if(!torMode || !torneo) return;
+  var payload = {name:playerName, score:score, nivel:level, aciertos:hits, t:Date.now()};
+  torPlayed = payload; renderTorneo();
+  getToken().then(function(tok){
+    if(!tok) return;
+    return fetch(fbUrl('torneo/' + torneo.id + '/scores/' + playerId) + '?auth=' + tok, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  }).catch(function(){});
+}
+// salir de la app en plena pregunta del torneo cuesta una vida
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden && torMode && tInt && !answered && document.getElementById('gameScreen').classList.contains('active')){
+    answered = true; clearInterval(tInt);
+    showC('Saliste de la app: -1 vida');
+    loseLife();
+  }
+});
+
+// ===== MODO PROFESOR =====
+var pfCat = 0, pfDur = 0;
+const PF_DURS = [[20*60000,'20 min'],[60*60000,'1 hora'],[24*3600000,'24 horas'],[7*86400000,'7 días']];
+function openProf(){
+  if(!isProf()) return;
+  document.getElementById('iBgProf').src = ASSETS.bg_purple;
+  renderProf();
+  show('profScreen');
+}
+function renderProf(){
+  var open = torOpen();
+  document.getElementById('pfOpen').style.display = open ? 'none' : '';
+  document.getElementById('pfLive').style.display = open ? '' : 'none';
+  document.getElementById('pfErr').textContent = ''; document.getElementById('pfErr2').textContent = '';
+  if(open){
+    document.getElementById('pfState').innerHTML = '<b>' + (CATS[torneo.cat]||'') + '</b><br>cierra ' + fmtFecha(torneo.cierra) + '<br><span id="pfCount">…</span>';
+    fetch(fbUrl('torneo/' + torneo.id + '/scores')).then(function(r){ return r.json(); }).then(function(d){
+      var n = d ? Object.keys(d).length : 0; var el = document.getElementById('pfCount'); if(el) el.textContent = n + (n===1?' alumno ya jugó':' alumnos ya jugaron');
+    }).catch(function(){});
+  } else {
+    var row = document.getElementById('pfCats'); row.innerHTML = '';
+    var opts = []; Object.keys(CATS).forEach(function(k){ k=parseInt(k); if(catPool(k).length >= 10) opts.push(k); });
+    if(!pfCat || opts.indexOf(pfCat)<0) pfCat = opts[0] || 0;
+    opts.forEach(function(k){
+      var b = document.createElement('button'); b.className = 'cat-btn' + (k===pfCat?' sel':''); b.textContent = CATS[k];
+      b.style.backgroundImage = "url(" + ASSETS.btn_cat + ")"; b.onclick = function(){ pfCat = k; renderProf(); }; row.appendChild(b);
+    });
+    var dr = document.getElementById('pfDur'); dr.innerHTML = '';
+    PF_DURS.forEach(function(d,i){
+      var b = document.createElement('button'); b.className = 'cat-btn' + (i===pfDur?' sel':''); b.textContent = d[1];
+      b.style.backgroundImage = "url(" + ASSETS.btn_cat + ")"; b.onclick = function(){ pfDur = i; renderProf(); }; dr.appendChild(b);
+    });
+  }
+  var last = document.getElementById('pfLast');
+  if(torneo && !open){ last.innerHTML = 'Último torneo: <b>' + (CATS[torneo.cat]||'') + '</b> · cerró ' + fmtFecha(torneo.cierra); } else last.innerHTML = '';
+}
+function profWrite(obj){
+  return getToken().then(function(tok){
+    if(!tok) throw new Error('sin sesión');
+    return fetch(fbUrl('torneo/actual') + '?auth=' + tok, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(obj) })
+      .then(function(r){ if(!r.ok) throw new Error('Firebase ' + r.status); });
+  });
+}
+function profAbrir(){
+  if(!isProf() || !pfCat) return;
+  var now = Date.now();
+  var t = { id:'t' + now.toString(36), cat:pfCat, abre:now, cierra: now + PF_DURS[pfDur][0], titulo: CATS[pfCat] };
+  profWrite(t).then(function(){ torneo = t; torPlayed = null; renderTorneo(); renderProf(); showC('Torneo abierto'); })
+    .catch(function(e){ document.getElementById('pfErr').textContent = 'No se pudo abrir (' + e.message + ')'; });
+}
+function profCerrar(){
+  if(!isProf() || !torneo) return;
+  var t = Object.assign({}, torneo, {cierra: Date.now()});
+  profWrite(t).then(function(){ torneo = t; renderTorneo(); renderProf(); showC('Torneo cerrado'); })
+    .catch(function(e){ document.getElementById('pfErr2').textContent = 'No se pudo cerrar (' + e.message + ')'; });
+}
+
 // --- pantalla ---
 function fmtPts(n){ return n.toLocaleString('es-MX') + ' pts.'; }
 function renderRows(rows){
@@ -1188,10 +1379,15 @@ function renderRows(rows){
       '<div class="lb-pts">'+fmtPts(Number(r.score)||0)+'</div></div></div>';
   }).join('');
 }
-function showLeaderboard(){
+function lbTab(v){ showLeaderboard(v); }
+function showLeaderboard(view){
   clearInterval(tInt);
+  lbView = (view === 'torneo' && torneo) ? 'torneo' : 'global';
+  document.getElementById('lbTabG').className = 'lb-tab' + (lbView==='global' ? ' on' : '');
+  document.getElementById('lbTabT').className = 'lb-tab' + (lbView==='torneo' ? ' on' : '') + (torneo ? '' : ' hide');
   var st = document.getElementById('lbStatus');
   show('lbScreen');
+  if(lbView === 'torneo'){ showTorneoBoard(); return; }
   renderRows(localScores());
   if(!hasFirebase()){ st.textContent = 'Puntajes de este teléfono'; return; }
   st.textContent = 'Cargando…';
@@ -1201,7 +1397,6 @@ function showLeaderboard(){
     if(data && typeof data === 'object'){
       Object.keys(data).forEach(function(k){ var v = data[k]; if(v) rows.push({id:k, name:v.name, score:v.score}); });
     }
-    // Si este teléfono aún no aparece en Firebase, lo mostramos igual.
     if(auth && best && !rows.some(function(r){ return r.id === playerId; })) rows.push({id:playerId, name:playerName, score:best});
     renderRows(rows);
     var top = rows.slice().sort(function(a,b){ return (b.score||0)-(a.score||0); })[0];
@@ -1210,6 +1405,25 @@ function showLeaderboard(){
   }).catch(function(){
     st.textContent = 'Sin conexión: puntajes de este teléfono';
   });
+}
+function showTorneoBoard(){
+  var st = document.getElementById('lbStatus'), list = document.getElementById('lbList');
+  var cat = CATS[torneo.cat] || '';
+  st.textContent = 'Cargando…'; list.innerHTML = '';
+  fetch(fbUrl('torneo/' + torneo.id + '/scores')).then(function(r){ return r.json(); }).then(function(d){
+    var rows = []; if(d && typeof d === 'object') Object.keys(d).forEach(function(k){ var v=d[k]; if(v) rows.push({id:k, name:v.name, score:v.score}); });
+    var mine = rows.find(function(r){ return r.id === playerId; });
+    if(torOpen() && !isProf()){
+      // tabla oculta hasta que cierre: solo cuántos han jugado y tu propio puntaje
+      list.innerHTML = '<div class="lb-empty">Torneo de <b>' + cat + '</b> en curso.<br>' + rows.length + (rows.length===1?' jugador ya jugó.':' jugadores ya jugaron.') +
+        (mine ? '<br><br>Tu puntaje: <b>' + fmtN(mine.score) + ' pts.</b>' : '<br><br>Aún no juegas tu intento.') + '<br><br>La tabla se revela al cerrar:<br>' + fmtFecha(torneo.cierra) + '</div>';
+      st.textContent = 'Torneo abierto';
+      return;
+    }
+    renderRows(rows);
+    if(!rows.length) list.innerHTML = '<div class="lb-empty">Nadie ha jugado el torneo de ' + cat + '.</div>';
+    st.textContent = 'Torneo: ' + cat + (torOpen() ? ' (abierto, vista del profe)' : ' · cerrado ' + fmtFecha(torneo.cierra));
+  }).catch(function(){ st.textContent = 'Sin conexión'; });
 }
 
 /* PWA: modo offline */
