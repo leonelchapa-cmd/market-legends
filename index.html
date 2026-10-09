@@ -1102,6 +1102,7 @@ function quitYes(){
   clearInterval(tInt); answered = true;
   if(torMode){ showResult(false); } else { goMenu(); }
 }
+document.addEventListener('keydown', function(ev){ if(ev.key==='Escape'){ if(document.getElementById('quitOverlay').classList.contains('active')) quitNo(); else askQuit(); } });   // en PC, Esc = salir
 // ----- ¿Continuar? (el "insert coin" de las maquinitas, con monedas del juego) -----
 var ctLeft = 9;
 function showContinue(){
