@@ -325,11 +325,28 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 
 /* ===== ESCRITORIO: fondo del juego difuminado y el telefono como dispositivo ===== */
 .desk-bg{display:none;position:fixed;inset:0;overflow:hidden;background:#2a0a4a;}
-.desk-bg img{width:100%;height:100%;object-fit:cover;object-position:50% 100%;filter:blur(22px) brightness(.5) saturate(1.15);transform:scale(1.1);}
-.desk-bg:after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 30%,rgba(0,0,0,.45) 100%);}
+.desk-bg img{width:100%;height:100%;object-fit:cover;object-position:50% 100%;filter:blur(7px) brightness(.82) saturate(1.1);transform:scale(1.04);}
+.desk-bg:after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 35%,rgba(0,0,0,.35) 100%);}
 @media (min-width:700px) and (pointer:fine){
-  .desk-bg{display:block;}
-  .phone{border-radius:46px;box-shadow:0 0 0 11px #17171c,0 0 0 13px #3b3b46,0 40px 90px rgba(0,0,0,.65);}
+  .desk-bg{display:none;}
+  /* menu */
+  .logo-img{width:auto;max-width:420px;max-height:230px;margin-top:28px;}
+  .owl-wrap{width:auto;max-width:300px;}
+  .phone .jugar-btn,.phone .tor-btn{width:300px;}
+  #iBgHome{object-position:50% 80%;}
+  .sunlight{width:120%;top:-30%;}
+  /* juego */
+  .gtop,.arc-row,.qwrap,.twrap,.answers,.powers{max-width:780px;}
+  .qcard{min-height:140px;}
+  .qtxt{font-size:20px;}
+  .phone #gameScreen .answers{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:max-content;align-content:center;gap:22px;flex:1 1 auto;max-height:none;margin:10px auto;}
+  .phone #gameScreen .ans{min-height:88px;font-size:18px;}
+  .phone #gameScreen .powers{margin-top:auto;margin-bottom:26px;}
+  /* ronda, resultados, leaderboard, entrar, profesor, continuar */
+  .round-owl{width:auto;max-width:260px;}
+  .round-banner,.hintrow,.rbtns,.lb-head,.lb-card,.lg-card,.pf-card,.ct-card{max-width:560px;}
+  .medalw{max-width:330px;}
+  .ct-overlay{padding:24px calc(50% - 280px);}
 }
 
 /* ===== MODO ARCADE: vidas, nivel, HI-SCORE, continuar ===== */
@@ -394,10 +411,31 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 #gameScreen .ans{flex:0 1 auto;min-height:60px;font-size:16px;}
 #gameScreen .qcard{min-height:130px;}
 #gameScreen .powers{margin-top:auto;margin-bottom:22px;}
+
+/* ===== PC: paneles laterales (logo y scoreboard en vivo) ===== */
+.desk-side{display:none;position:fixed;top:50%;transform:translateY(-50%);width:330px;z-index:2;text-align:center;}
+.desk-left{right:calc(50% + 215px);}
+.desk-right{left:calc(50% + 215px);}
+.desk-logo{width:92%;filter:drop-shadow(0 10px 18px rgba(0,0,0,.35));}
+.desk-rec{margin-top:10px;font-family:'Katahdin','Fredoka One',cursive;font-size:17px;color:#fff;letter-spacing:1px;text-shadow:0 2px 0 rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.35);}
+.desk-rec b{color:#FFD54F;}
+.desk-card{position:relative;background:transparent center/100% 100% no-repeat;padding:34px 30px 30px;}
+.desk-title{font-family:'Katahdin','Fredoka One',cursive;font-size:24px;color:#4A0080;letter-spacing:2px;margin-bottom:10px;}
+.desk-row{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:2px solid #F1E6F7;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;color:#3E2723;}
+.desk-row:last-child{border-bottom:none;}
+.desk-row .r{width:26px;font-family:'Katahdin','Fredoka One',cursive;font-size:20px;color:#4A0080;text-align:center;}
+.desk-row .n{flex:1;text-align:left;font-size:15px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.desk-row .p{font-size:15px;color:#616161;}
+.desk-row img{width:30px;height:30px;border-radius:50%;}
+.desk-empty{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:13px;color:#757575;padding:14px 0;}
+.desk-sub{margin-top:8px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:11px;color:#9E9E9E;letter-spacing:1px;text-transform:uppercase;}
+/* paneles laterales desactivados: en PC el juego llena la ventana */
 </style>
 </head>
 <body>
 <div class="desk-bg"><img id="iDeskBg" alt=""></div>
+<div class="desk-side desk-left"><img class="desk-logo" id="iDeskLogo" alt="Market Legends"><div class="desk-rec" id="deskRec"></div></div>
+<div class="desk-side desk-right"><div class="desk-card" id="deskCard"><div class="desk-title">SCOREBOARD</div><div id="deskRows"><div class="desk-empty">Cargando…</div></div><div class="desk-sub" id="deskSub">Top 5 · global</div></div></div>
 <div class="phone">
 
   <!-- MENU -->
@@ -665,7 +703,7 @@ function fitPhone(){
   var sc=Math.min(w/390, h/844);
   var ph=document.querySelector('.phone');
   if(window.matchMedia("(min-width:700px) and (pointer:fine)").matches){
-    sc*=0.9; ph.style.width='390px'; ph.style.height='844px';   // PC: telefono con marco
+    sc = h/844; ph.style.width=Math.round(w/sc)+'px'; ph.style.height='844px';   // PC: pantalla completa, lienzo ancho
   } else {
     // celular/tablet: el juego llena toda la pantalla (sin franjas), el lienzo se ensancha o alarga lo necesario
     ph.style.width=Math.round(w/sc)+'px'; ph.style.height=Math.round(h/sc)+'px';
@@ -680,6 +718,9 @@ window.onload = function() {
   document.getElementById('iLogo').src    = ASSETS.logo;
   document.getElementById('iBgHome').src  = ASSETS.bg_home;
   document.getElementById('iDeskBg').src  = ASSETS.bg_home;
+  document.getElementById('iDeskLogo').src = ASSETS.logo;
+  document.getElementById('deskCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  if(window.matchMedia('(min-width:1180px) and (pointer:fine)').matches){ setInterval(loadHi, 45000); }
   document.getElementById('iSun').src     = ASSETS.sunlight;
   document.getElementById('iBgGame').src  = ASSETS.bg_game;
   ['iBgRound','iBgResult','iBgLb'].forEach(function(id){ document.getElementById(id).src = ASSETS.bg_purple; });
@@ -899,7 +940,16 @@ function loadHi(){
     var top = {score:0, name:''};
     if(data && typeof data==='object') Object.keys(data).forEach(function(k){ var v=data[k]; if(v && Number(v.score)>top.score){ top={score:Number(v.score), name:v.name||''}; } });
     hi = top; renderHi();
+    var rows=[]; if(data && typeof data==='object') Object.keys(data).forEach(function(k){ var v=data[k]; if(v && v.name) rows.push({name:v.name, score:Number(v.score)||0}); });
+    renderDesk(rows);
   }).catch(function(){});
+}
+function renderDesk(rows){
+  var el=document.getElementById('deskRows'), rec=document.getElementById('deskRec'); if(!el) return;
+  rows=rows.sort(function(a,b){ return b.score-a.score; }).slice(0,5);
+  if(!rows.length){ el.innerHTML='<div class="desk-empty">Aún no hay puntajes</div>'; }
+  else el.innerHTML=rows.map(function(r,i){ return '<div class="desk-row"><span class="r">'+(i+1)+'</span><img src="'+ASSETS.owl_circle+'" alt=""><span class="n">'+String(r.name).replace(/[<>&"]/g,'').slice(0,16)+'</span><span class="p">'+fmtN(r.score)+' pts</span></div>'; }).join('');
+  if(rec) rec.innerHTML = hi.score ? 'RÉCORD <b>'+fmtN(hi.score)+'</b> · '+String(hi.name||'').replace(/[<>&"]/g,'').toUpperCase().slice(0,14) : '';
 }
 
 function loadQ() {
