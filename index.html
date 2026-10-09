@@ -322,9 +322,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .lg-foot{margin-top:10px;font-family:'RalewayG','Nunito',sans-serif;font-weight:600;font-size:11px;color:#9E9E9E;}
 .lg-stats{margin-top:14px;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:14px;color:#3E2723;line-height:1.6;}
 .lg-stats b{color:#4A0080;}
+
+/* ===== ESCRITORIO: fondo del juego difuminado y el telefono como dispositivo ===== */
+.desk-bg{display:none;position:fixed;inset:0;overflow:hidden;background:#2a0a4a;}
+.desk-bg img{width:100%;height:100%;object-fit:cover;object-position:50% 100%;filter:blur(22px) brightness(.5) saturate(1.15);transform:scale(1.1);}
+.desk-bg:after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 30%,rgba(0,0,0,.45) 100%);}
+@media (min-width:700px) and (pointer:fine){
+  .desk-bg{display:block;}
+  .phone{border-radius:46px;box-shadow:0 0 0 11px #17171c,0 0 0 13px #3b3b46,0 40px 90px rgba(0,0,0,.65);}
+}
 </style>
 </head>
 <body>
+<div class="desk-bg"><img id="iDeskBg" alt=""></div>
 <div class="phone">
 
   <!-- MENU -->
@@ -538,6 +548,7 @@ let powUsed={time:false,bomb:false,skip:false},rQ=[];
 function fitPhone(){
   var w=window.innerWidth, h=window.innerHeight;
   var sc=Math.min(w/390, h/844);
+  if(window.matchMedia("(min-width:700px) and (pointer:fine)").matches) sc*=0.9;   // PC (pantalla ancha + mouse): aire para el marco
   document.documentElement.style.setProperty('--s', sc.toFixed(4));
 }
 fitPhone(); window.addEventListener('resize', fitPhone); window.addEventListener('orientationchange', fitPhone);
@@ -546,6 +557,7 @@ fitPhone(); window.addEventListener('resize', fitPhone); window.addEventListener
 window.onload = function() {
   document.getElementById('iLogo').src    = ASSETS.logo;
   document.getElementById('iBgHome').src  = ASSETS.bg_home;
+  document.getElementById('iDeskBg').src  = ASSETS.bg_home;
   document.getElementById('iSun').src     = ASSETS.sunlight;
   document.getElementById('iBgGame').src  = ASSETS.bg_game;
   ['iBgRound','iBgResult','iBgLb'].forEach(function(id){ document.getElementById(id).src = ASSETS.bg_purple; });
