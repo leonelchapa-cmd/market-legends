@@ -368,6 +368,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .tor-btn small{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;opacity:.95;margin-top:2px;}
 .tor-btn:active{transform:scale(.97);}
 .tor-btn.done{filter:grayscale(.6) brightness(.9);}
+.tor-btn.sb-btn{filter:hue-rotate(150deg) saturate(.9);}
 #profScreen{background:#3E1C63;align-items:center;justify-content:flex-start;}
 #pfBack{position:absolute;top:14px;left:14px;z-index:20;width:54px;height:42px;border:none;background:transparent center/100% 100% no-repeat;font-size:0;cursor:pointer;}
 .pf-title{font-family:'Katahdin','Fredoka One',cursive;font-size:28px;color:#fff;letter-spacing:3px;margin-top:64px;position:relative;z-index:5;text-shadow:0 3px 10px rgba(0,0,0,.3);}
@@ -410,8 +411,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     </div>
     <button class="jugar-btn" onclick="startGame()">JUGAR</button>
     <button class="tor-btn" id="torBtn" onclick="startTorneo()">TORNEO<small id="torSub"></small></button>
-    <div class="cat-row" id="catRow"></div>
-    <div class="cat-hint" id="catHint"></div>
+    <button class="tor-btn on sb-btn" id="sbBtn" onclick="showLeaderboard()">SCOREBOARD<small>Global y torneo</small></button>
     <div class="menu-hi" id="menuHi"></div>
   </div>
 
@@ -683,6 +683,7 @@ window.onload = function() {
   document.getElementById('iCoin1').src = ASSETS.sp_coins; document.getElementById('iCoin2').src = ASSETS.sp_coins;
   document.getElementById('ctCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
   document.getElementById('torBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
+  document.getElementById('sbBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('acProf').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('iBgProf').src = ASSETS.bg_purple;
   document.getElementById('pfBack').style.backgroundImage = "url("+ASSETS.sp_home+")";
@@ -820,24 +821,8 @@ function goMenu(){clearInterval(tInt); clearInterval(ctInt); torMode=false; rend
 // ===== CATEGORIA DE LA SEMANA (selector del menu) =====
 var selCat = 0;  // 0 = mezcla de todas
 try{ selCat = parseInt(localStorage.getItem('ml_cat')) || 0; }catch(e){}
-function catPool(c){ return c ? ALL_Q.filter(function(q){ return q.cat===c; }) : ALL_Q; }
-function renderCats(){
-  var row = document.getElementById('catRow'); if(!row) return;
-  row.innerHTML = '';
-  var opts = [];
-  Object.keys(CATS).forEach(function(k){ k=parseInt(k); if(catPool(k).length >= 10) opts.push([k, CATS[k]]); });
-  if(!selCat || catPool(selCat).length < 10){ selCat = opts.length ? opts[0][0] : 0; try{ localStorage.setItem('ml_cat', selCat); }catch(e){} }
-  opts.forEach(function(o){
-    var b = document.createElement('button');
-    b.className = 'cat-btn' + (o[0]===selCat ? ' sel' : '');
-    b.textContent = o[1];
-    b.style.backgroundImage = "url(" + ASSETS.btn_cat + ")";
-    b.onclick = function(){ selCat = o[0]; try{ localStorage.setItem('ml_cat', selCat); }catch(e){} renderCats(); };
-    row.appendChild(b);
-  });
-  var h = document.getElementById('catHint');
-  if(h) h.textContent = '';
-}
+function catPool(c){ return ALL_Q.filter(function(q){ return !q._ejemplo && (!c || q.cat===c); }); }
+function renderCats(){ /* la portada ya no tiene selector: JUGAR mezcla todas las categorias con preguntas reales */ }
 
 function startGame() {
   if(!auth){ askName(startGame); return; }
@@ -848,13 +833,13 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  rQ = shuffle(catPool(selCat)).slice(0, ARC.maxQ);   // arcade: 25 preguntas = 5 niveles, o hasta perder las vidas
+  rQ = shuffle(catPool(torMode ? selCat : 0)).slice(0, ARC.maxQ);   // arcade: 25 preguntas = 5 niveles, o hasta perder las vidas
   renderLives(); renderHi();
   loadQ();
 }
 function levelOf(i){ return Math.min(ARC.times.length, Math.floor(i/ARC.perLevel)+1); }
 function showLevel(cb){
-  var cat = selCat ? CATS[selCat] : 'TRIVIA';
+  var cat = torMode ? (CATS[selCat] || 'TORNEO') : 'FINANZAS';
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundBonus').textContent = tMax + ' SEGUNDOS · PUNTOS x' + ARC.mult[level-1];
@@ -1262,7 +1247,7 @@ function loadTorneo(){
 function renderTorneo(){
   var b = document.getElementById('torBtn'), sub = document.getElementById('torSub');
   var tabT = document.getElementById('lbTabT');
-  if(!torneo || !torneo.id){ b.className = 'tor-btn'; if(tabT) tabT.classList.add('hide'); return; }
+  if(!torneo || !torneo.id){ b.className = 'tor-btn on done'; sub.textContent = 'El profe lo abre en clase'; if(tabT) tabT.classList.add('hide'); return; }
   if(tabT) tabT.classList.remove('hide');
   var cat = CATS[torneo.cat] || '';
   if(torOpen()){
@@ -1274,7 +1259,7 @@ function renderTorneo(){
   }
 }
 function startTorneo(){
-  if(!torneo) return;
+  if(!torneo){ showC('Todavía no hay torneo'); return; }
   if(!torOpen() || torPlayed){ showLeaderboard('torneo'); return; }
   if(!auth){ askName(startTorneo); return; }
   // volver a verificar en Firebase que no haya jugado (otro teléfono)
