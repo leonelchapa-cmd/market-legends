@@ -411,7 +411,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     </div>
     <button class="jugar-btn" onclick="startGame()">JUGAR</button>
     <button class="tor-btn" id="torBtn" onclick="startTorneo()">TORNEO<small id="torSub"></small></button>
-    <button class="tor-btn on sb-btn" id="sbBtn" onclick="showLeaderboard()">SCOREBOARD<small>Global y torneo</small></button>
+    <button class="tor-btn on sb-btn" id="sbBtn" onclick="showLeaderboard()">SCOREBOARD</button>
     <div class="menu-hi" id="menuHi"></div>
   </div>
 
@@ -1247,7 +1247,7 @@ function loadTorneo(){
 function renderTorneo(){
   var b = document.getElementById('torBtn'), sub = document.getElementById('torSub');
   var tabT = document.getElementById('lbTabT');
-  if(!torneo || !torneo.id){ b.className = 'tor-btn on done'; sub.textContent = 'El profe lo abre en clase'; if(tabT) tabT.classList.add('hide'); return; }
+  if(!torneo || !torneo.id){ b.className = 'tor-btn on done'; sub.textContent = ''; if(tabT) tabT.classList.add('hide'); return; }
   if(tabT) tabT.classList.remove('hide');
   var cat = CATS[torneo.cat] || '';
   if(torOpen()){
