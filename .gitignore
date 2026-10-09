@@ -1,0 +1,9 @@
+# solo se publica el juego; lo demas es material de trabajo
+original/
+.claude/
+mock_prof.html
+*.docx
+banco_general_1865.json
+preguntas.json
+FIREBASE.md
+CLAUDE.md
