@@ -454,6 +454,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
   .phone .tor-btn{width:280px;height:80px;}
   .rbtn{flex:0 0 118px!important;width:118px;height:92px!important;}
 }
+
+/* ===== modos: boton INFINITO y menu compacto en PC (4 botones) ===== */
+.tor-btn.inf-btn{filter:hue-rotate(300deg) saturate(1.05);}
+@media (min-width:700px) and (pointer:fine){
+  .logo-img{max-height:160px;margin-top:16px;}
+  .owl-wrap{max-width:190px;margin:4px auto;}
+  .phone .jugar-btn{height:76px;margin-top:4px;font-size:30px;}
+  .phone .tor-btn{height:64px;margin-top:6px;font-size:22px;}
+}
 </style>
 </head>
 <body>
@@ -477,7 +486,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <img class="owl-frame" id="iOwl2" alt="">
       <img class="owl-frame" id="iOwl3" alt="">
     </div>
-    <button class="jugar-btn" onclick="startGame()">JUGAR</button>
+    <button class="jugar-btn" onclick="startNormal()">NORMAL</button>
+    <button class="tor-btn on inf-btn" id="infBtn" onclick="startInfinito()">INFINITO</button>
     <button class="tor-btn" id="torBtn" onclick="startTorneo()">TORNEO<small id="torSub"></small></button>
     <button class="tor-btn on sb-btn" id="sbBtn" onclick="showLeaderboard()">SCOREBOARD</button>
     <div class="menu-hi" id="menuHi"></div>
@@ -593,7 +603,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
     <button class="lb-back" onclick="goMenu()" aria-label="Menú">🏠</button>
     <div class="lb-head"><img id="iLbHead" alt=""><div class="lb-title">LEADERBOARD</div></div>
     <div class="lb-card">
-      <div class="lb-tabs"><button class="lb-tab on" id="lbTabG" onclick="lbTab('global')">GLOBAL</button><button class="lb-tab hide" id="lbTabT" onclick="lbTab('torneo')">TORNEO</button></div>
+      <div class="lb-tabs"><button class="lb-tab on" id="lbTabG" onclick="lbTab('global')">NORMAL</button><button class="lb-tab" id="lbTabI" onclick="lbTab('infinito')">INFINITO</button><button class="lb-tab hide" id="lbTabT" onclick="lbTab('torneo')">TORNEO</button></div>
       <div class="lb-list" id="lbList"></div>
       <div class="lb-status" id="lbStatus"></div>
     </div>
@@ -719,6 +729,12 @@ let score=0,coins=100,best=0,cur=0,tL=15,tInt=null,answered=false,roundNum=0;
 const ARC = { times:[15,14,13,12,10], mult:[1,1.5,2,3,4], perLevel:5, lives:3, maxLives:5, contCost:50, bonusLifeAt:5000, maxQ:25, finishBonus:500, lifeBonus:250 };
 let lives=3, level=1, tMax=15, contUsed=false, bonusGiven=false, newRecord=false, hits=0, ctInt=null;
 var hi = {score:0, name:''};   // HI-SCORE global (tope del leaderboard)
+var mode = 'normal';           // 'normal' (25 preguntas, con final) | 'infinito' (hasta perder); el torneo = normal + torMode
+var bestInf = 0, hiInf = {score:0, name:''};
+try{ bestInf = parseInt(localStorage.getItem('ml_best_inf'))||0; }catch(e){}
+function curHi(){ return mode==='infinito' ? hiInf : hi; }
+function levelTime(l){ return l<=ARC.times.length ? ARC.times[l-1] : Math.max(6, 10-(l-ARC.times.length)); }   // infinito: 9, 8, 7, 6...
+function levelMult(l){ return l<=ARC.mult.length ? ARC.mult[l-1] : Math.min(8, 4+(l-ARC.mult.length)*0.5); }
 // ----- torneo de la semana -----
 const PROF_UID = '4vbMzzlEMvh3Y37IKw55iOwexxM2';          // uid de Firebase de la cuenta del profe (Leonel)
 var torneo = null;                        // {id, cat, abre, cierra, titulo} desde /torneo/actual
@@ -726,7 +742,7 @@ var torMode = false;                      // la partida en curso es del torneo
 var torPlayed = null;                     // mi puntaje ya registrado en el torneo actual
 var lbView = 'global';
 try{ coins=parseInt(localStorage.getItem('ml_coins'))||100; best=parseInt(localStorage.getItem('ml_best'))||0; }catch(e){}
-function save(){ try{ localStorage.setItem('ml_coins',coins); localStorage.setItem('ml_best',best); }catch(e){} }
+function save(){ try{ localStorage.setItem('ml_coins',coins); localStorage.setItem('ml_best',best); localStorage.setItem('ml_best_inf',bestInf); }catch(e){} }
 let powUsed={time:false,bomb:false,skip:false},rQ=[];
 
 // ===== ESCALA: la pantalla de 390x844 cabe en cualquier ventana =====
@@ -906,6 +922,8 @@ try{ selCat = parseInt(localStorage.getItem('ml_cat')) || 0; }catch(e){}
 function catPool(c){ return ALL_Q.filter(function(q){ return !q._ejemplo && (!c || q.cat===c); }); }
 function renderCats(){ /* la portada ya no tiene selector: JUGAR mezcla todas las categorias con preguntas reales */ }
 
+function startNormal(){ mode='normal'; torMode=false; startGame(); }
+function startInfinito(){ mode='infinito'; torMode=false; startGame(); }
 function startGame() {
   if(!auth){ askName(startGame); return; }
   if(!torMode) renderCats();
@@ -915,7 +933,8 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  rQ = buildRun(catPool(torMode ? selCat : 0));   // arcade: 25 preguntas por dificultad (faciles, medias, dificiles), o hasta perder las vidas
+  if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
+  else { rQ = withGen(buildRun(catPool(torMode ? selCat : 0)), torMode ? selCat : 0); }   // normal/torneo: 25 preguntas, una de cálculo por nivel
   renderLives(); renderHi();
   loadQ();
 }
@@ -933,6 +952,65 @@ function buildRun(pool){
   });
   return run.slice(0, ARC.maxQ);
 }
+function buildInfinite(pool){
+  var by={1:[],2:[],3:[]}; shuffle(pool).forEach(function(q){ by[q.d||2].push(q); });
+  return by[1].concat(by[2], by[3]);
+}
+function withGen(run, cat){
+  if(cat && cat!==1) return run;                    // solo Portafolios tiene cálculos
+  for(var i=ARC.perLevel-1; i<run.length; i+=ARC.perLevel) run[i] = genQ(Math.floor(i/ARC.perLevel)+1);
+  return run;
+}
+// ----- preguntas de cálculo con números al azar (nunca se repiten) -----
+function pickOne(a){ return a[Math.floor(Math.random()*a.length)]; }
+function pickN(a,n){ return shuffle(a).slice(0,n); }
+function f2(x){ return (Math.round(x*100)/100).toFixed(2); }
+function uniq4(ok, cands){
+  var out=[ok]; cands.forEach(function(c){ if(out.length<4 && out.indexOf(c)<0) out.push(c); });
+  var k=1; while(out.length<4){ var alt = ok.replace(/[\d.,]+/, function(m){ var v=parseFloat(m.replace(/,/g,'')); return f2(v*(1+0.15*k)); }); if(out.indexOf(alt)<0) out.push(alt); k++; }
+  return out;
+}
+var WEIGHTS2=[[50,50],[60,40],[70,30],[80,20]], WEIGHTS3=[[50,30,20],[40,40,20],[60,30,10],[50,25,25]];
+function genBeta(hard){
+  var w = pickOne(hard?WEIGHTS3:WEIGHTS2), b = pickN([0.8,0.9,1.0,1.1,1.2,1.3,1.5], w.length);
+  var beta = w.reduce(function(a,x,i){ return a + x*b[i]; },0)/100;
+  var avg = b.reduce(function(a,x){ return a+x; },0)/b.length;
+  var partes = w.map(function(x,i){ return x+'% en un ETF con beta '+f2(b[i]); });
+  return { q:'Portafolio: '+partes.join(', ')+'. ¿Beta del portafolio?', opts: uniq4(f2(beta), [f2(avg), f2(beta+0.1), f2(Math.max.apply(null,b))]),
+           e:'Beta del portafolio = suma de peso × beta de cada ETF.' };
+}
+function genCAPM(hard){
+  var rf=pickOne([3,4,5]), pm=pickOne([4,5,6]), b=pickOne(hard?[0.6,0.9,1.3,1.7]:[0.5,0.8,1.2,1.5,2.0]);
+  var e = rf + b*pm;
+  return { q:'Tasa libre de riesgo '+rf+'%, prima de riesgo del mercado '+pm+'% y beta '+f2(b)+'. ¿Rendimiento esperado según el CAPM?',
+           opts: uniq4(f2(e)+'%', [f2(rf+pm)+'%', f2(b*pm)+'%', f2((rf+pm)*b)+'%']), e:'E(r) = rf + beta × prima de mercado.' };
+}
+function genTER(hard){
+  var w = pickOne(hard?WEIGHTS3:WEIGHTS2), t = pickN([0.03,0.05,0.10,0.20,0.30,0.50,0.75], w.length);
+  var ter = w.reduce(function(a,x,i){ return a + x*t[i]; },0)/100, avg = t.reduce(function(a,x){ return a+x; },0)/t.length;
+  var partes = w.map(function(x,i){ return x+'% con TER '+f2(t[i])+'%'; });
+  return { q:'Portafolio: '+partes.join(', ')+'. ¿TER ponderado?', opts: uniq4(f2(ter)+'%', [f2(avg)+'%', f2(Math.max.apply(null,t))+'%', f2(Math.min.apply(null,t))+'%']),
+           e:'TER ponderado = suma de peso × TER de cada ETF.' };
+}
+function genCap(hard){
+  var sh=pickOne(hard?[120,350,640,900]:[50,100,200,250,400,500,800]), pr=pickOne(hard?[18,35,65,95]:[12,25,40,50,80,100]);
+  var cap=sh*pr;
+  return { q:'Una empresa tiene '+sh+' millones de acciones en circulación y la acción vale '+pr+' pesos. ¿Capitalización de mercado?',
+           opts: uniq4(fmtN(cap)+' millones', [fmtN(cap/10)+' millones', fmtN(cap*10)+' millones', fmtN(sh+pr)+' millones']), e:'Capitalización = acciones en circulación × precio.' };
+}
+function genSharpe(hard){
+  var r=pickOne(hard?[9,11,14,17]:[8,10,12,15,18]), rf=pickOne([3,4,5]), v=pickOne(hard?[12,18,22]:[10,15,20,25]);
+  var sh=(r-rf)/v;
+  return { q:'Un ETF rinde '+r+'% con volatilidad de '+v+'%; la tasa libre de riesgo es '+rf+'%. ¿Índice de Sharpe?',
+           opts: uniq4(f2(sh), [f2(r/v), f2((r-rf)/v*2), f2(r-rf)]), e:'Sharpe = (rendimiento − tasa libre de riesgo) / volatilidad.' };
+}
+function genQ(lv){
+  var hard = lv>=5;
+  var q = pickOne([genBeta,genCAPM,genTER,genCap,genSharpe])(hard);
+  q.c=0; q.cat=1; q.d=3; q.gen=true;
+  q.t = lv>5 ? Math.max(12, 25-(lv-5)*2) : 25;     // los cálculos llevan su propio reloj
+  return q;
+}
 function qid(q){ var h=5381, t=q.q||''; for(var i=0;i<t.length;i++){ h=((h<<5)+h+t.charCodeAt(i))|0; } return 'q'+(h>>>0).toString(36); }
 function recordStat(q, ok){
   if(!hasFirebase() || !auth || !q) return;
@@ -942,13 +1020,13 @@ function recordStat(q, ok){
       body: JSON.stringify({ n:{'.sv':{'increment':1}}, ok:{'.sv':{'increment': ok?1:0}}, d:q.d||2, cat:q.cat||0 }) });
   }).catch(function(){});
 }
-function levelOf(i){ return Math.min(ARC.times.length, Math.floor(i/ARC.perLevel)+1); }
+function levelOf(i){ var l=Math.floor(i/ARC.perLevel)+1; return mode==='infinito' ? l : Math.min(ARC.times.length, l); }
 function showLevel(cb){
-  var cat = torMode ? (CATS[selCat] || 'TORNEO') : '';
+  var cat = torMode ? (CATS[selCat] || 'TORNEO') : (mode==='infinito' ? 'INFINITO' : '');
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundCat').style.display = cat ? '' : 'none';
-  document.getElementById('roundBonus').textContent = tMax + ' SEGUNDOS · PUNTOS x' + ARC.mult[level-1];
+  document.getElementById('roundBonus').textContent = tMax + ' SEGUNDOS · PUNTOS x' + levelMult(level);
   document.getElementById('lvlTag').textContent     = 'NIVEL ' + level;
   show('roundScreen');
   setTimeout(function(){ show('gameScreen'); cb(); }, level===1 ? 2200 : 1700);
@@ -963,9 +1041,9 @@ function renderLives(){
 }
 function fmtN(n){ return Number(n||0).toLocaleString('es-MX'); }
 function renderHi(){
-  var el = document.getElementById('hiLine');
-  if(newRecord || (auth && score>0 && score>=hi.score && hi.score>0)){ el.className='hi mine'; el.textContent = 'HI ' + fmtN(Math.max(score,hi.score)) + ' · ' + (playerName||'').toUpperCase().slice(0,10); }
-  else if(hi.score){ el.className='hi'; el.textContent = 'HI ' + fmtN(hi.score) + ' · ' + String(hi.name||'').toUpperCase().slice(0,10); }
+  var el = document.getElementById('hiLine'), H = curHi();
+  if(newRecord || (auth && score>0 && score>=H.score && H.score>0)){ el.className='hi mine'; el.textContent = 'HI ' + fmtN(Math.max(score,H.score)) + ' · ' + (playerName||'').toUpperCase().slice(0,10); }
+  else if(H.score){ el.className='hi'; el.textContent = 'HI ' + fmtN(H.score) + ' · ' + String(H.name||'').toUpperCase().slice(0,10); }
   else { el.className='hi'; el.textContent = 'HI ---'; }
   var m = document.getElementById('menuHi');
   if(m) m.innerHTML = hi.score ? 'RÉCORD: <b>' + fmtN(hi.score) + '</b> · ' + String(hi.name||'').replace(/[<>&"]/g,'').toUpperCase().slice(0,16) : '';
@@ -979,6 +1057,11 @@ function loadHi(){
     var rows=[]; if(data && typeof data==='object') Object.keys(data).forEach(function(k){ var v=data[k]; if(v && v.name) rows.push({name:v.name, score:Number(v.score)||0}); });
     renderDesk(rows);
   }).catch(function(){});
+  fetch(fbUrl('scores_inf')).then(function(r){ return r.json(); }).then(function(data){
+    var top = {score:0, name:''};
+    if(data && typeof data==='object') Object.keys(data).forEach(function(k){ var v=data[k]; if(v && Number(v.score)>top.score){ top={score:Number(v.score), name:v.name||''}; } });
+    hiInf = top; renderHi();
+  }).catch(function(){});
 }
 function renderDesk(rows){
   var el=document.getElementById('deskRows'), rec=document.getElementById('deskRec'); if(!el) return;
@@ -989,14 +1072,18 @@ function renderDesk(rows){
 }
 
 function loadQ() {
-  if(cur >= rQ.length){ score += ARC.finishBonus + ARC.lifeBonus*lives; showResult(true); return; }   // llegó al final con vidas
+  if(cur >= rQ.length){
+    if(mode==='infinito'){ rQ.push(genQ(Math.max(1, levelOf(cur)))); }                    // se acabó el banco: cálculos sin fin
+    else { score += ARC.finishBonus + ARC.lifeBonus*lives; showResult(true); return; }    // llegó al final con vidas
+  }
   var lv = levelOf(cur);
-  if(lv !== level){ level = lv; tMax = ARC.times[level-1]; showLevel(loadQ); return; }
+  if(lv !== level){ level = lv; tMax = levelTime(level); showLevel(loadQ); return; }
   answered = false;
   owlThink();
   powUsed={time:false,bomb:false,skip:false};
   ['pTime','pBomb','pSkip'].forEach(function(id){ var b=document.getElementById(id); b.disabled=false; b.style.opacity='1'; });
   var q = rQ[cur];
+  tMax = q.t ? q.t : levelTime(level);
   document.getElementById('sDisplay').textContent = score;
   document.getElementById('cDisplay').textContent = coins;
   document.getElementById('qTxt').textContent     = q.q;
@@ -1055,15 +1142,16 @@ function pick(idx, ci){
   if(idx === ci){
     document.getElementById('a'+idx).classList.add('correct');
     glowButton(document.getElementById('a'+idx), true); owlReact(true);
-    var pts = Math.round((100 + tL*5) * ARC.mult[level-1]);
+    var pts = Math.round((100 + tL*5) * levelMult(level));
     score += pts; coins += 10; hits++;
     document.getElementById('sDisplay').textContent = score;
     document.getElementById('cDisplay').textContent = coins;
     showC('+'+pts+' ⭐');
     owlCelebrate();
     if(!bonusGiven && score >= ARC.bonusLifeAt && lives < ARC.maxLives){ bonusGiven = true; lives++; renderLives(); var ls=document.querySelectorAll('.life'); if(ls[lives-1]) ls[lives-1].classList.add('new'); setTimeout(function(){ showC('¡VIDA EXTRA!'); }, 900); }
-    if(hi.score && score > hi.score && !newRecord){ newRecord = true; setTimeout(function(){ showC('¡NUEVO RÉCORD!'); }, 900); }
-    if(!hi.score && score>0 && !newRecord){ newRecord = true; }
+    var H = curHi();
+    if(H.score && score > H.score && !newRecord){ newRecord = true; setTimeout(function(){ showC('¡NUEVO RÉCORD!'); }, 900); }
+    if(!H.score && score>0 && !newRecord){ newRecord = true; }
     renderHi();
     setTimeout(next, 1600);
     return;
@@ -1164,19 +1252,21 @@ function showC(txt){
 function showResult(dominated){
   clearInterval(tInt); clearInterval(ctInt);
   coins += 30;
+  var inf = (mode==='infinito');
   document.getElementById('rsTitle').textContent = dominated ? '¡RONDA COMPLETA!' : 'GAME OVER';
-  document.getElementById('rsInfo').textContent  = 'NIVEL ' + level + ' · ' + hits + ' ACIERTOS DE ' + cur;
-  var rec = newRecord && score > 0 && score >= hi.score;
+  document.getElementById('rsInfo').textContent  = inf ? ('INFINITO · LLEGASTE A LA PREGUNTA ' + cur + ' · ' + hits + ' ACIERTOS') : ('NIVEL ' + level + ' · ' + hits + ' ACIERTOS DE ' + cur);
+  var H = curHi();
+  var rec = newRecord && score > 0 && score >= H.score;
   document.getElementById('rsRecord').style.display = rec ? '' : 'none';
-  if(rec){ hi = {score:score, name:playerName}; renderHi(); }
-  if(score > best) best = score;
+  if(rec){ if(inf) hiInf = {score:score, name:playerName}; else hi = {score:score, name:playerName}; renderHi(); }
+  if(inf){ if(score > bestInf) bestInf = score; } else { if(score > best) best = score; }
   save();
-  localBestUpdate(score);
+  if(!inf) localBestUpdate(score);
   pushScore();
   if(torMode){ pushTorneo(); document.getElementById('rsTitle').textContent = 'TORNEO: ' + document.getElementById('rsTitle').textContent; }
   torMode = false;
   document.getElementById('fScore').textContent  = score;
-  document.getElementById('bestLbl').textContent = 'MEJOR: ' + best;
+  document.getElementById('bestLbl').textContent = 'MEJOR: ' + (inf ? bestInf : best);
   document.getElementById('rCoins').textContent  = coins;
   var hints = [
     {t:'PISTA: USA LA BOMBA PARA ELIMINAR 2 OPCIONES INCORRECTAS', ic:'pow_bomb'},
@@ -1242,7 +1332,7 @@ function openAccount(){          // engrane del menú
   document.getElementById('lgCard').style.display = 'none';
   document.getElementById('acCard').style.display = '';
   document.getElementById('acName').textContent = playerName.toUpperCase();
-  document.getElementById('acStats').textContent = 'Mejor puntaje: ' + best.toLocaleString('es-MX') + ' pts.';
+  document.getElementById('acStats').textContent = 'Normal: ' + best.toLocaleString('es-MX') + ' pts. · Infinito: ' + bestInf.toLocaleString('es-MX') + ' pts.';
   document.getElementById('acProf').className = 'ac-prof' + (isProf() ? ' on' : '');
   show('loginScreen');
 }
@@ -1266,8 +1356,8 @@ function setAuth(j, name, nick){
            exp: Date.now() + (parseInt(j.expiresIn,10) || 3600) * 1000 - 60000 };
   storeAuth();
   playerName = name; playerId = auth.uid;
-  best = 0; save();                                   // el mejor puntaje es de la cuenta, no del teléfono
-  try{ localStorage.removeItem('ml_synced'); }catch(e){}
+  best = 0; bestInf = 0; save();                      // los mejores puntajes son de la cuenta, no del teléfono
+  try{ localStorage.removeItem('ml_synced'); localStorage.removeItem('ml_synced_inf'); }catch(e){}
 }
 function getToken(){            // Promise con un idToken vigente ('' si no hay sesión)
   if(!auth) return Promise.resolve('');
@@ -1318,14 +1408,18 @@ function lgSubmit(){
     lgErr(authMsg(e && e.message));
   });
 }
-function syncBest(tok){         // baja el mejor puntaje de la cuenta (por si jugó en otro teléfono)
-  return fetch(fbUrl('scores/' + playerId) + '?auth=' + tok).then(function(r){ return r.json(); }).then(function(v){
+function syncBest(tok){         // baja los mejores puntajes de la cuenta (por si jugó en otro teléfono)
+  var a = fetch(fbUrl('scores/' + playerId) + '?auth=' + tok).then(function(r){ return r.json(); }).then(function(v){
     if(v && Number(v.score) > best){ best = Number(v.score); save(); }
   }).catch(function(){});
+  var b = fetch(fbUrl('scores_inf/' + playerId) + '?auth=' + tok).then(function(r){ return r.json(); }).then(function(v){
+    if(v && Number(v.score) > bestInf){ bestInf = Number(v.score); save(); }
+  }).catch(function(){});
+  return Promise.all([a,b]);
 }
 function logout(silent){
-  auth = null; storeAuth(); playerName = ''; playerId = ''; best = 0; save();
-  try{ localStorage.removeItem('ml_synced'); }catch(e){}
+  auth = null; storeAuth(); playerName = ''; playerId = ''; best = 0; bestInf = 0; save();
+  try{ localStorage.removeItem('ml_synced'); localStorage.removeItem('ml_synced_inf'); }catch(e){}
   if(!silent) goMenu();
 }
 if(auth){ getToken().then(function(tok){ if(tok) syncBest(tok).then(pushScore); }); }
@@ -1346,20 +1440,21 @@ function localBestUpdate(s){
 
 // --- Firebase: subir el mejor puntaje (solo si mejoró o cambió el nombre), firmado con la sesión ---
 function pushScore(){
-  if(!hasFirebase() || !auth || !playerName || !best) return;
-  var stamp = playerName + '|' + best;
-  var done = '';
-  try{ done = localStorage.getItem('ml_synced')||''; }catch(e){}
+  if(!hasFirebase() || !auth || !playerName) return;
+  pushOne('scores', best, 'ml_synced');
+  pushOne('scores_inf', bestInf, 'ml_synced_inf');
+}
+function pushOne(node, val, key){
+  if(!val) return;
+  var stamp = playerName + '|' + val, done = '';
+  try{ done = localStorage.getItem(key)||''; }catch(e){}
   if(done === stamp) return;
   getToken().then(function(tok){
     if(!tok) return;
-    return fetch(fbUrl('scores/'+playerId) + '?auth=' + tok, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name:playerName, score:best, t:Date.now()})
-    }).then(function(r){
-      if(r.ok){ try{ localStorage.setItem('ml_synced', stamp); }catch(e){} }
-    });
+    return fetch(fbUrl(node + '/' + playerId) + '?auth=' + tok, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name:playerName, score:val, t:Date.now()})
+    }).then(function(r){ if(r.ok){ try{ localStorage.setItem(key, stamp); }catch(e){} } });
   }).catch(function(){});
 }
 
@@ -1402,7 +1497,7 @@ function startTorneo(){
   // volver a verificar en Firebase que no haya jugado (otro teléfono)
   fetch(fbUrl('torneo/' + torneo.id + '/scores/' + playerId)).then(function(r){ return r.json(); }).then(function(v){
     if(v && v.score!=null){ torPlayed = v; renderTorneo(); showLeaderboard('torneo'); return; }
-    torMode = true; selCat = torneo.cat; startGame();
+    mode = 'normal'; torMode = true; selCat = torneo.cat; startGame();
   }).catch(function(){ showC('Sin conexión'); });
 }
 function pushTorneo(){
@@ -1497,26 +1592,29 @@ function renderRows(rows){
 function lbTab(v){ showLeaderboard(v); }
 function showLeaderboard(view){
   clearInterval(tInt);
-  lbView = (view === 'torneo' && torneo) ? 'torneo' : 'global';
+  lbView = (view === 'torneo' && torneo) ? 'torneo' : (view === 'infinito' ? 'infinito' : 'global');
   document.getElementById('lbTabG').className = 'lb-tab' + (lbView==='global' ? ' on' : '');
+  document.getElementById('lbTabI').className = 'lb-tab' + (lbView==='infinito' ? ' on' : '');
   document.getElementById('lbTabT').className = 'lb-tab' + (lbView==='torneo' ? ' on' : '') + (torneo ? '' : ' hide');
   var st = document.getElementById('lbStatus');
   show('lbScreen');
   if(lbView === 'torneo'){ showTorneoBoard(); return; }
-  renderRows(localScores());
+  var inf = (lbView === 'infinito'), node = inf ? 'scores_inf' : 'scores', mine = inf ? bestInf : best;
+  renderRows(inf ? [] : localScores());
   if(!hasFirebase()){ st.textContent = 'Puntajes de este teléfono'; return; }
   st.textContent = 'Cargando…';
   pushScore();
-  fetch(fbUrl('scores')).then(function(r){ return r.json(); }).then(function(data){
+  fetch(fbUrl(node)).then(function(r){ return r.json(); }).then(function(data){
     var rows = [];
     if(data && typeof data === 'object'){
       Object.keys(data).forEach(function(k){ var v = data[k]; if(v) rows.push({id:k, name:v.name, score:v.score}); });
     }
-    if(auth && best && !rows.some(function(r){ return r.id === playerId; })) rows.push({id:playerId, name:playerName, score:best});
+    if(auth && mine && !rows.some(function(r){ return r.id === playerId; })) rows.push({id:playerId, name:playerName, score:mine});
     renderRows(rows);
+    if(!rows.length && inf) document.getElementById('lbList').innerHTML = '<div class="lb-empty">Nadie ha jugado Infinito.<br>¡Sé el primero!</div>';
     var top = rows.slice().sort(function(a,b){ return (b.score||0)-(a.score||0); })[0];
-    if(top && top.score){ hi = {score:Number(top.score), name:top.name||''}; renderHi(); }
-    st.textContent = 'Leaderboard global';
+    if(top && top.score){ if(inf) hiInf = {score:Number(top.score), name:top.name||''}; else hi = {score:Number(top.score), name:top.name||''}; renderHi(); }
+    st.textContent = inf ? 'Leaderboard infinito' : 'Leaderboard normal';
   }).catch(function(){
     st.textContent = 'Sin conexión: puntajes de este teléfono';
   });
