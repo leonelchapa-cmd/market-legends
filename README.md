@@ -2,6 +2,9 @@
 
 Trivia de finanzas en español. App web (HTML/JS) para estudiantes.
 
+## Liga del juego
+https://leonelchapa-cmd.github.io/market-legends/
+
 ## Cómo abrir el juego
 Doble clic en `index.html` (Chrome o Safari). Funciona sin internet.
 
