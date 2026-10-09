@@ -540,8 +540,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <div id="pfOpen">
         <div class="pf-lbl">Categoría del torneo</div>
         <div class="pf-row" id="pfCats"></div>
-        <div class="pf-lbl" style="margin-top:14px">Cierra en</div>
-        <div class="pf-row" id="pfDur"></div>
         <div class="pf-err" id="pfErr"></div>
         <button class="pf-go" id="pfGo" onclick="profAbrir()">ABRIR TORNEO</button>
       </div>
@@ -1269,7 +1267,7 @@ function renderTorneo(){
   var cat = CATS[torneo.cat] || '';
   if(torOpen()){
     b.className = 'tor-btn on' + (torPlayed ? ' done' : '');
-    sub.textContent = torPlayed ? (cat + ' · ya jugaste: ' + fmtN(torPlayed.score) + ' pts') : (cat + ' · cierra ' + fmtFecha(torneo.cierra) + ' · 1 intento');
+    sub.textContent = torPlayed ? (cat + ' · ya jugaste: ' + fmtN(torPlayed.score) + ' pts') : (cat + ' · 1 intento');
   } else {
     b.className = 'tor-btn on done';
     sub.textContent = cat + ' · cerrado · ver tabla';
@@ -1304,8 +1302,8 @@ document.addEventListener('visibilitychange', function(){
 });
 
 // ===== MODO PROFESOR =====
-var pfCat = 0, pfDur = 0;
-const PF_DURS = [[20*60000,'20 min'],[60*60000,'1 hora'],[24*3600000,'24 horas'],[7*86400000,'7 días']];
+var pfCat = 0;
+const TOR_MAX = 24*3600000;   // seguridad: si el profe no lo cierra, se cierra solo a las 24 h
 function openProf(){
   if(!isProf()) return;
   document.getElementById('iBgProf').src = ASSETS.bg_purple;
@@ -1318,7 +1316,7 @@ function renderProf(){
   document.getElementById('pfLive').style.display = open ? '' : 'none';
   document.getElementById('pfErr').textContent = ''; document.getElementById('pfErr2').textContent = '';
   if(open){
-    document.getElementById('pfState').innerHTML = '<b>' + (CATS[torneo.cat]||'') + '</b><br>cierra ' + fmtFecha(torneo.cierra) + '<br><span id="pfCount">…</span>';
+    document.getElementById('pfState').innerHTML = '<b>' + (CATS[torneo.cat]||'') + '</b><br><span id="pfCount">…</span><br>Queda abierto hasta que lo cierres.';
     fetch(fbUrl('torneo/' + torneo.id + '/scores')).then(function(r){ return r.json(); }).then(function(d){
       var n = d ? Object.keys(d).length : 0; var el = document.getElementById('pfCount'); if(el) el.textContent = n + (n===1?' alumno ya jugó':' alumnos ya jugaron');
     }).catch(function(){});
@@ -1330,14 +1328,9 @@ function renderProf(){
       var b = document.createElement('button'); b.className = 'cat-btn' + (k===pfCat?' sel':''); b.textContent = CATS[k];
       b.style.backgroundImage = "url(" + ASSETS.btn_cat + ")"; b.onclick = function(){ pfCat = k; renderProf(); }; row.appendChild(b);
     });
-    var dr = document.getElementById('pfDur'); dr.innerHTML = '';
-    PF_DURS.forEach(function(d,i){
-      var b = document.createElement('button'); b.className = 'cat-btn' + (i===pfDur?' sel':''); b.textContent = d[1];
-      b.style.backgroundImage = "url(" + ASSETS.btn_cat + ")"; b.onclick = function(){ pfDur = i; renderProf(); }; dr.appendChild(b);
-    });
   }
   var last = document.getElementById('pfLast');
-  if(torneo && !open){ last.innerHTML = 'Último torneo: <b>' + (CATS[torneo.cat]||'') + '</b> · cerró ' + fmtFecha(torneo.cierra); } else last.innerHTML = '';
+  if(torneo && !open){ last.innerHTML = 'Último torneo: <b>' + (CATS[torneo.cat]||'') + '</b>'; } else last.innerHTML = '';
 }
 function profWrite(obj){
   return getToken().then(function(tok){
@@ -1349,7 +1342,7 @@ function profWrite(obj){
 function profAbrir(){
   if(!isProf() || !pfCat) return;
   var now = Date.now();
-  var t = { id:'t' + now.toString(36), cat:pfCat, abre:now, cierra: now + PF_DURS[pfDur][0], titulo: CATS[pfCat] };
+  var t = { id:'t' + now.toString(36), cat:pfCat, abre:now, cierra: now + TOR_MAX, titulo: CATS[pfCat] };
   profWrite(t).then(function(){ torneo = t; torPlayed = null; renderTorneo(); renderProf(); showC('Torneo abierto'); })
     .catch(function(e){ document.getElementById('pfErr').textContent = 'No se pudo abrir (' + e.message + ')'; });
 }
@@ -1416,7 +1409,7 @@ function showTorneoBoard(){
     if(torOpen() && !isProf()){
       // tabla oculta hasta que cierre: solo cuántos han jugado y tu propio puntaje
       list.innerHTML = '<div class="lb-empty">Torneo de <b>' + cat + '</b> en curso.<br>' + rows.length + (rows.length===1?' jugador ya jugó.':' jugadores ya jugaron.') +
-        (mine ? '<br><br>Tu puntaje: <b>' + fmtN(mine.score) + ' pts.</b>' : '<br><br>Aún no juegas tu intento.') + '<br><br>La tabla se revela al cerrar:<br>' + fmtFecha(torneo.cierra) + '</div>';
+        (mine ? '<br><br>Tu puntaje: <b>' + fmtN(mine.score) + ' pts.</b>' : '<br><br>Aún no juegas tu intento.') + '<br><br>La tabla se revela cuando el profe cierre el torneo.</div>';
       st.textContent = 'Torneo abierto';
       return;
     }
