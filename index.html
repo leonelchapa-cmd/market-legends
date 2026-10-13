@@ -402,7 +402,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .tor-btn.done{filter:grayscale(.6) brightness(.9);}
 .tor-btn.sb-btn{filter:hue-rotate(150deg) saturate(.9);}
 #profScreen{background:#3E1C63;align-items:center;justify-content:flex-start;}
-#pfBack{position:absolute;top:14px;left:14px;z-index:20;width:54px;height:42px;border:none;background:transparent center/100% 100% no-repeat;font-size:0;cursor:pointer;}
+#pfBack,.lg-back-btn{position:absolute;top:14px;left:14px;z-index:20;width:54px;height:42px;border:none;background:transparent center/100% 100% no-repeat;font-size:0;cursor:pointer;}
+#catScreen{background:#3E1C63;align-items:center;justify-content:flex-start;}
+.pf-row-big{flex-direction:column;align-items:stretch;gap:10px;}
+.pf-row-big .cat-btn{min-height:52px;font-size:14px;letter-spacing:1px;}
+@media (min-width:700px) and (pointer:fine){ #catScreen{justify-content:center;} }
 .pf-title{font-family:'Katahdin','Fredoka One',cursive;font-size:28px;color:#fff;letter-spacing:3px;margin-top:64px;position:relative;z-index:5;text-shadow:0 3px 10px rgba(0,0,0,.3);}
 .pf-card{position:relative;z-index:5;width:92%;margin-top:14px;padding:26px 22px 22px;background:transparent center/100% 100% no-repeat;text-align:center;}
 .pf-lbl{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:12px;color:#616161;letter-spacing:1px;text-transform:uppercase;margin:6px 0 8px;}
@@ -606,6 +610,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <div class="lb-tabs"><button class="lb-tab on" id="lbTabG" onclick="lbTab('global')">NORMAL</button><button class="lb-tab" id="lbTabI" onclick="lbTab('infinito')">INFINITO</button><button class="lb-tab hide" id="lbTabT" onclick="lbTab('torneo')">TORNEO</button></div>
       <div class="lb-list" id="lbList"></div>
       <div class="lb-status" id="lbStatus"></div>
+    </div>
+  </div>
+
+  <!-- ELEGIR TEMA (antes de NORMAL) -->
+  <div class="screen" id="catScreen">
+    <img class="bgimg" id="iBgCat" alt="">
+    <button id="catBack" class="lg-back-btn" onclick="goMenu()" aria-label="Menú">Menú</button>
+    <div class="pf-title">¿QUÉ TEMA?</div>
+    <div class="pf-card" id="catCard">
+      <div class="pf-row pf-row-big" id="catBtns"></div>
     </div>
   </div>
 
@@ -815,6 +829,9 @@ window.onload = function() {
   document.getElementById('acProf').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('iBgProf').src = ASSETS.bg_purple;
   document.getElementById('pfBack').style.backgroundImage = "url("+ASSETS.sp_home+")";
+  document.getElementById('iBgCat').src = ASSETS.bg_purple;
+  document.getElementById('catBack').style.backgroundImage = "url("+ASSETS.sp_home+")";
+  document.getElementById('catCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
   document.getElementById('pfCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
   document.querySelectorAll('.pf-go').forEach(function(e){ e.style.backgroundImage = "url("+ASSETS.btn_play+")"; });
   loadTorneo();
@@ -947,12 +964,23 @@ function goMenu(){clearInterval(tInt); clearInterval(ctInt); if(sndUnlocked) mus
 
 // ===== GAME FLOW =====
 // ===== CATEGORIA DE LA SEMANA (selector del menu) =====
-var selCat = 0;  // 0 = mezcla de todas
+var selCat = 0;  // 0 = todas
 try{ selCat = parseInt(localStorage.getItem('ml_cat')) || 0; }catch(e){}
 function catPool(c){ return ALL_Q.filter(function(q){ return !q._ejemplo && (!c || q.cat===c); }); }
 function renderCats(){ /* la portada ya no tiene selector: JUGAR mezcla todas las categorias con preguntas reales */ }
 
-function startNormal(){ mode='normal'; torMode=false; startGame(); }
+function startNormal(){
+  if(!auth){ askName(startNormal); return; }
+  var row = document.getElementById('catBtns'); row.innerHTML = '';
+  var opts = [[0,'TODAS']]; Object.keys(CATS).forEach(function(k){ k=parseInt(k); if(catPool(k).length >= 10) opts.push([k, CATS[k]]); });
+  opts.forEach(function(o){
+    var b = document.createElement('button'); b.className = 'cat-btn' + (o[0]===selCat ? ' sel' : ''); b.textContent = o[1];
+    b.style.backgroundImage = "url(" + ASSETS.btn_cat + ")";
+    b.onclick = function(){ selCat = o[0]; try{ localStorage.setItem('ml_cat', selCat); }catch(e){} mode='normal'; torMode=false; startGame(); };
+    row.appendChild(b);
+  });
+  show('catScreen');
+}
 function startInfinito(){ mode='infinito'; torMode=false; startGame(); }
 function startGame() {
   if(!auth){ askName(startGame); return; }
@@ -964,7 +992,7 @@ function startGame() {
     document.getElementById(id).style.opacity='1';
   });
   if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
-  else { rQ = withGen(buildRun(catPool(torMode ? selCat : 0)), torMode ? selCat : 0); }   // normal/torneo: 25 preguntas, una de cálculo por nivel
+  else { rQ = withGen(buildRun(catPool(selCat)), selCat); }   // normal/torneo: 25 preguntas del tema elegido (0 = todas), una de cálculo por nivel si hay Portafolios
   renderLives(); renderHi();
   sfxPlay('inicio');
   loadQ();
@@ -1083,7 +1111,7 @@ function recordStat(q, ok){
 }
 function levelOf(i){ var l=Math.floor(i/ARC.perLevel)+1; return mode==='infinito' ? l : Math.min(ARC.times.length, l); }
 function showLevel(cb){
-  var cat = torMode ? (CATS[selCat] || 'TORNEO') : (mode==='infinito' ? 'INFINITO' : '');
+  var cat = torMode ? (CATS[selCat] || 'TORNEO') : (mode==='infinito' ? 'INFINITO' : (CATS[selCat] || ''));
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundCat').style.display = cat ? '' : 'none';
