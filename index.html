@@ -1011,7 +1011,7 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  if(mode==='prep'){ rQ = shuffle(PREP.preguntas.slice()).slice(0, 30); contUsed = true; }   // prep: 30 del banco privado, con explicación
+  if(mode==='prep'){ rQ = shuffle(PREP.preguntas.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]/.test(q.q) ? 150 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 150 s   // prep: 30 del banco privado, con explicación
   else if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
   else { rQ = withGen(buildRun(catPool(selCat)), selCat); }   // normal/torneo: 25 preguntas del tema elegido (0 = todas), una de cálculo por nivel si hay Portafolios
   renderLives(); renderHi();
@@ -1118,7 +1118,7 @@ function genQ(lv){
   var hard = lv>=5;
   var q = pickOne([genBeta,genCAPM,genTER,genCap,genSharpe,genPW,genIdx])(hard);
   q.c=0; q.cat=1; q.d=3; q.gen=true;
-  q.t = lv>5 ? Math.max(12, 25-(lv-5)*2) : 25;     // los cálculos llevan su propio reloj
+  q.t = lv>5 ? Math.max(20, 40-(lv-5)*2) : 40;     // los cálculos llevan su propio reloj (40 s; en infinito baja hasta 20)
   return q;
 }
 function qid(q){ var h=5381, t=q.q||''; for(var i=0;i<t.length;i++){ h=((h<<5)+h+t.charCodeAt(i))|0; } return 'q'+(h>>>0).toString(36); }
