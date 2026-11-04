@@ -467,6 +467,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
   .phone .jugar-btn{height:76px;margin-top:4px;font-size:30px;}
   .phone .tor-btn{height:64px;margin-top:6px;font-size:22px;}
 }
+
+.ac-prep{filter:hue-rotate(120deg) saturate(1.1);}
+#expTitle{font-size:24px;}
+.exp-topic{font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:12px;color:#8E24AA;letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.exp-txt{text-align:left;max-height:42vh;overflow:auto;white-space:pre-line;font-size:13px;font-weight:600;line-height:1.4;margin-top:8px;-webkit-user-select:text;user-select:text;}
+body.prep .qtxt{font-size:13px;line-height:1.32;text-align:left;white-space:pre-line;max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+body.prep .ans .txt{font-size:14px;}
+@media (min-width:700px) and (pointer:fine){ body.prep .qtxt{max-height:200px;font-size:15px;} }
 </style>
 </head>
 <body>
@@ -669,6 +677,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <div class="lg-stats" id="acStats"></div>
       <button class="lg-btn" id="acGo" onclick="goMenu(); startGame();">JUGAR</button>
       <button class="ac-prof" id="acProf" onclick="openProf()">MODO PROFESOR</button>
+      <button class="ac-prof ac-prep" id="acPrep" onclick="startPrep()">PREP</button>
       <div class="lg-link" id="acSnd" onclick="toggleSound()">Sonido: activado</div>
       <div class="lg-link" onclick="logout()">Cerrar sesión</div>
     </div>
@@ -680,6 +689,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
       <div class="ct-sub" id="quitSub">Se pierde la partida en curso.</div>
       <button class="ct-btn" id="quitYes" onclick="quitYes()">SALIR</button>
       <div class="ct-no" onclick="quitNo()">Seguir jugando</div>
+    </div>
+  </div>
+  <div class="ct-overlay" id="expOverlay">
+    <div class="ct-card" id="expCard">
+      <div class="ct-title" id="expTitle">CORRECTO</div>
+      <div class="exp-topic" id="expTopic"></div>
+      <div class="ct-sub exp-txt" id="expTxt"></div>
+      <button class="ct-btn" id="expBtn" onclick="expGo()">SIGUIENTE</button>
     </div>
   </div>
   <div class="ct-overlay" id="ctOverlay">
@@ -820,13 +837,13 @@ window.onload = function() {
   document.querySelector('.jugar-btn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('iCoin1').src = ASSETS.sp_coins; document.getElementById('iCoin2').src = ASSETS.sp_coins;
   document.getElementById('ctCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
-  document.getElementById('quitCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
-  document.getElementById('quitYes').style.backgroundImage = "url("+ASSETS.btn_play+")";
+  document.getElementById('quitCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")"; document.getElementById('expCard').style.backgroundImage = "url("+ASSETS.sp_optbox+")";
+  document.getElementById('quitYes').style.backgroundImage = "url("+ASSETS.btn_play+")"; document.getElementById('expBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('gHome').style.backgroundImage = "url("+ASSETS.sp_home+")";
   document.getElementById('torBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('sbBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('infBtn').style.backgroundImage = "url("+ASSETS.btn_play+")";
-  document.getElementById('acProf').style.backgroundImage = "url("+ASSETS.btn_play+")";
+  document.getElementById('acProf').style.backgroundImage = "url("+ASSETS.btn_play+")"; document.getElementById('acPrep').style.backgroundImage = "url("+ASSETS.btn_play+")";
   document.getElementById('iBgProf').src = ASSETS.bg_purple;
   document.getElementById('pfBack').style.backgroundImage = "url("+ASSETS.sp_home+")";
   document.getElementById('iBgCat').src = ASSETS.bg_purple;
@@ -960,7 +977,8 @@ function show(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
 }
-function goMenu(){clearInterval(tInt); clearInterval(ctInt); if(sndUnlocked) musicPlay('menu'); document.getElementById('quitOverlay').classList.remove('active'); torMode=false; renderTorneo(); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
+function goMenu(){
+  if(mode==='prep') mode = 'normal'; document.body.classList.remove('prep');clearInterval(tInt); clearInterval(ctInt); if(sndUnlocked) musicPlay('menu'); document.getElementById('quitOverlay').classList.remove('active'); torMode=false; renderTorneo(); document.getElementById('ctOverlay').classList.remove('active'); renderHi(); show('menuScreen');}
 
 // ===== GAME FLOW =====
 // ===== CATEGORIA DE LA SEMANA (selector del menu) =====
@@ -991,7 +1009,8 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
+  if(mode==='prep'){ rQ = shuffle(PREP.preguntas.slice()).slice(0, 30); contUsed = true; }   // prep: 30 del banco privado, con explicación
+  else if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
   else { rQ = withGen(buildRun(catPool(selCat)), selCat); }   // normal/torneo: 25 preguntas del tema elegido (0 = todas), una de cálculo por nivel si hay Portafolios
   renderLives(); renderHi();
   sfxPlay('inicio');
@@ -1102,6 +1121,7 @@ function genQ(lv){
 }
 function qid(q){ var h=5381, t=q.q||''; for(var i=0;i<t.length;i++){ h=((h<<5)+h+t.charCodeAt(i))|0; } return 'q'+(h>>>0).toString(36); }
 function recordStat(q, ok){
+  if(mode==='prep') return;
   if(!hasFirebase() || !auth || !q) return;
   getToken().then(function(tok){
     if(!tok) return;
@@ -1112,6 +1132,7 @@ function recordStat(q, ok){
 function levelOf(i){ var l=Math.floor(i/ARC.perLevel)+1; return mode==='infinito' ? l : Math.min(ARC.times.length, l); }
 function showLevel(cb){
   var cat = torMode ? (CATS[selCat] || 'TORNEO') : (mode==='infinito' ? 'INFINITO' : (CATS[selCat] || ''));
+  if(mode==='prep') cat = PREP ? PREP.titulo : 'PREP';
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundCat').style.display = cat ? '' : 'none';
@@ -1173,12 +1194,13 @@ function loadQ() {
   powUsed={time:false,bomb:false,skip:false};
   ['pTime','pBomb','pSkip'].forEach(function(id){ var b=document.getElementById(id); b.disabled=false; b.style.opacity='1'; });
   var q = rQ[cur];
+  document.body.classList.toggle('prep', mode==='prep');
   tMax = q.t ? q.t : levelTime(level);
   document.getElementById('sDisplay').textContent = score;
   document.getElementById('cDisplay').textContent = coins;
   document.getElementById('qTxt').textContent     = q.q;
   // Shuffle answers
-  var idx = shuffle([0,1,2,3]);
+  var idx = shuffle(q.opts.map(function(_,i){ return i; }));   // 3 o 4 opciones
   var ci  = idx.indexOf(q.c);
   var opts = idx.map(function(i){ return q.opts[i]; });
   document.getElementById('ansDiv').innerHTML = opts.map(function(o,i){
@@ -1220,6 +1242,7 @@ function timeUp(){
   });
   owlReact(false);
   owlWrong();
+  if(mode==='prep'){ setTimeout(function(){ showExp(false); }, 900); return; }
   loseLife();
 }
 
@@ -1242,9 +1265,10 @@ function pick(idx, ci){
     owlCelebrate();
     if(!bonusGiven && score >= ARC.bonusLifeAt && lives < ARC.maxLives){ bonusGiven = true; lives++; renderLives(); var ls=document.querySelectorAll('.life'); if(ls[lives-1]) ls[lives-1].classList.add('new'); setTimeout(function(){ showC('¡VIDA EXTRA!'); sfxPlay('bono'); }, 900); }
     var H = curHi();
-    if(H.score && score > H.score && !newRecord){ newRecord = true; setTimeout(function(){ showC('¡NUEVO RÉCORD!'); sfxPlay('bono'); }, 900); }
-    if(!H.score && score>0 && !newRecord){ newRecord = true; }
+    if(mode!=='prep' && H.score && score > H.score && !newRecord){ newRecord = true; setTimeout(function(){ showC('¡NUEVO RÉCORD!'); sfxPlay('bono'); }, 900); }
+    if(mode!=='prep' && !H.score && score>0 && !newRecord){ newRecord = true; }
     renderHi();
+    if(mode==='prep'){ setTimeout(function(){ showExp(true); }, 900); return; }
     setTimeout(next, 1600);
     return;
   } else {
@@ -1252,6 +1276,7 @@ function pick(idx, ci){
     document.getElementById('a'+ci).classList.add('correct');
     glowButton(document.getElementById('a'+idx), false); glowButton(document.getElementById('a'+ci), true); owlReact(false);
     owlWrong();
+    if(mode==='prep'){ setTimeout(function(){ showExp(false); }, 900); return; }
     loseLife();
   }
 }
@@ -1325,7 +1350,7 @@ function usePow(t){
     var wrongs = shuffle(btns.filter(function(b){
       var m = b.getAttribute('onclick').match(/pick\((\d+),(\d+)\)/);
       return m && m[1] !== m[2];
-    })).slice(0,2);
+    })).slice(0, btns.length > 3 ? 2 : 1);   // con 3 opciones (prep) solo quita una
     wrongs.forEach(function(b){ b.style.opacity='.25'; b.disabled=true; });
   }
   if(t==='skip'){ clearInterval(tInt); next(); }
@@ -1345,21 +1370,22 @@ function showResult(dominated){
   clearInterval(tInt); clearInterval(ctInt);
   musicStop(); sfxPlay(dominated ? 'victoria' : 'bono');
   coins += 30;
-  var inf = (mode==='infinito');
+  var inf = (mode==='infinito'), prep = (mode==='prep');
   document.getElementById('rsTitle').textContent = dominated ? '¡RONDA COMPLETA!' : 'GAME OVER';
   document.getElementById('rsInfo').textContent  = inf ? ('INFINITO · LLEGASTE A LA PREGUNTA ' + cur + ' · ' + hits + ' ACIERTOS') : ('NIVEL ' + level + ' · ' + hits + ' ACIERTOS DE ' + cur);
   var H = curHi();
-  var rec = newRecord && score > 0 && score >= H.score;
+  var rec = !prep && newRecord && score > 0 && score >= H.score;
   document.getElementById('rsRecord').style.display = rec ? '' : 'none';
   if(rec){ if(inf) hiInf = {score:score, name:playerName}; else hi = {score:score, name:playerName}; renderHi(); }
-  if(inf){ if(score > bestInf) bestInf = score; } else { if(score > best) best = score; }
+  if(prep){ document.getElementById('rsInfo').textContent = (PREP ? PREP.titulo : 'PREP') + ' · ' + hits + ' ACIERTOS DE ' + cur; }
+  else if(inf){ if(score > bestInf) bestInf = score; } else { if(score > best) best = score; }
   save();
-  if(!inf) localBestUpdate(score);
-  pushScore();
+  if(!inf && !prep) localBestUpdate(score);
+  if(!prep) pushScore();
   if(torMode){ pushTorneo(); document.getElementById('rsTitle').textContent = 'TORNEO: ' + document.getElementById('rsTitle').textContent; }
   torMode = false;
   document.getElementById('fScore').textContent  = score;
-  document.getElementById('bestLbl').textContent = 'MEJOR: ' + (inf ? bestInf : best);
+  document.getElementById('bestLbl').textContent = prep ? 'SOLO PRÁCTICA' : 'MEJOR: ' + (inf ? bestInf : best);
   document.getElementById('rCoins').textContent  = coins;
   var hints = [
     {t:'PISTA: USA LA BOMBA PARA ELIMINAR 2 OPCIONES INCORRECTAS', ic:'pow_bomb'},
@@ -1427,6 +1453,7 @@ function openAccount(){          // engrane del menú
   document.getElementById('acName').textContent = playerName.toUpperCase();
   document.getElementById('acStats').textContent = 'Normal: ' + best.toLocaleString('es-MX') + ' pts. · Infinito: ' + bestInf.toLocaleString('es-MX') + ' pts.';
   document.getElementById('acProf').className = 'ac-prof' + (isProf() ? ' on' : '');
+  renderPrepBtn(); if(!PREP) loadPrep();
   renderSnd();
   show('loginScreen');
 }
@@ -1554,6 +1581,37 @@ function pushOne(node, val, key){
 
 // ===== TORNEO DE LA SEMANA =====
 function isProf(){ return !!(auth && PROF_UID && PROF_UID.indexOf('__')!==0 && auth.uid === PROF_UID); }
+// ----- PREP: banco privado del profe en Firebase /prep (solo lo lee su cuenta); no entra al scoreboard -----
+var PREP = null, expRight = false;
+function loadPrep(){
+  if(!isProf() || !FIREBASE_DB_URL) return;
+  getToken().then(function(tok){ return fetch(FIREBASE_DB_URL + '/prep.json?auth=' + tok); })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); } })
+    .catch(function(){});
+}
+function renderPrepBtn(){
+  var b = document.getElementById('acPrep'); if(!b) return;
+  b.className = 'ac-prof ac-prep' + (PREP ? ' on' : '');
+  if(PREP) b.textContent = PREP.titulo || 'PREP';
+}
+function startPrep(){
+  if(!PREP) return;
+  goMenu(); mode = 'prep'; torMode = false;
+  startGame();
+}
+function showExp(right){
+  expRight = right; var q = rQ[cur];
+  document.getElementById('expTitle').textContent = right ? 'CORRECTO' : 'INCORRECTO';
+  document.getElementById('expTopic').textContent = q.topic || '';
+  document.getElementById('expTxt').textContent = q.e || '';
+  document.getElementById('expTxt').scrollTop = 0;
+  document.getElementById('expOverlay').classList.add('active');
+}
+function expGo(){
+  document.getElementById('expOverlay').classList.remove('active');
+  if(expRight) next(); else loseLife();
+}
 function torOpen(){ return !!(torneo && torneo.id && Date.now() < torneo.cierra); }
 function fmtFecha(t){
   var d = new Date(t), dias=['dom','lun','mar','mié','jue','vie','sáb'];
