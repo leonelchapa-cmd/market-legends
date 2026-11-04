@@ -607,7 +607,7 @@ body.prep .ans .txt{font-size:14px;}
     <div class="rs-info" id="rsInfo"></div>
     <div class="rs-record" id="rsRecord" style="display:none">¡NUEVO RÉCORD!</div>
     <div class="rs-need" id="rsNeed" style="display:none"></div>
-    <button class="ct-btn rs-review" id="rsReview" style="display:none" onclick="showReview()">REPASAR LAS QUE FALLASTE</button>
+    <button class="ct-btn rs-review" id="rsReview" style="display:none" onclick="showReview()">REPASAR FALLADAS</button>
     <div class="hintrow">
       <div class="hicon-wrap">
         <img class="hicon-bg" id="hBg" alt="">
@@ -1427,7 +1427,7 @@ function showResult(dominated){
   ];
   var h = hints[Math.floor(Math.random()*hints.length)];
   document.getElementById('rsReview').style.display = missed.length ? '' : 'none';
-  document.getElementById('rsReview').textContent = 'REPASAR LAS QUE FALLASTE (' + missed.length + ')';
+  document.getElementById('rsReview').textContent = 'REPASAR FALLADAS (' + missed.length + ')';
   var nm = needMore(); var rn = document.getElementById('rsNeed');
   if(nm && !prep && !wasTor){ rn.style.display = ''; rn.textContent = 'NECESITAS MÁS: ' + CATS[nm.c] + ' (' + Math.round(100*nm.a) + '% DE ACIERTO)'; } else rn.style.display = 'none';
   document.getElementById('hTxt').textContent  = h.t;
