@@ -1590,7 +1590,8 @@ function loadPrep(){
   if(!isProf() || !FIREBASE_DB_URL) return;
   getToken().then(function(tok){ return fetch(FIREBASE_DB_URL + '/prep.json?auth=' + tok); })
     .then(function(r){ return r.json(); })
-    .then(function(j){ if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); } })
+    .then(function(j){ if(typeof j === 'string'){ try{ j = JSON.parse(j); }catch(e){ j = null; } }   // en la consola de Firebase se pegó como texto
+      if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); } })
     .catch(function(){});
 }
 function renderPrepBtn(){
