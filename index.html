@@ -678,6 +678,8 @@ body.prep .ans .txt{font-size:14px;}
       <button class="lg-btn" id="acGo" onclick="goMenu(); startGame();">JUGAR</button>
       <button class="ac-prof" id="acProf" onclick="openProf()">MODO PROFESOR</button>
       <button class="ac-prof ac-prep" id="acPrep" onclick="startPrep()">PREP</button>
+      <div class="lg-link" id="acPrepUp" style="display:none" onclick="document.getElementById('prepFile').click()">Subir banco de práctica (.json)</div>
+      <input type="file" id="prepFile" accept=".json,application/json" style="display:none" onchange="prepUpload(this.files[0])">
       <div class="lg-link" id="acSnd" onclick="toggleSound()">Sonido: activado</div>
       <div class="lg-link" onclick="logout()">Cerrar sesión</div>
     </div>
@@ -1454,6 +1456,7 @@ function openAccount(){          // engrane del menú
   document.getElementById('acStats').textContent = 'Normal: ' + best.toLocaleString('es-MX') + ' pts. · Infinito: ' + bestInf.toLocaleString('es-MX') + ' pts.';
   document.getElementById('acProf').className = 'ac-prof' + (isProf() ? ' on' : '');
   renderPrepBtn(); if(!PREP) loadPrep();
+  document.getElementById('acPrepUp').style.display = isProf() ? '' : 'none';
   renderSnd();
   show('loginScreen');
 }
@@ -1594,6 +1597,19 @@ function renderPrepBtn(){
   var b = document.getElementById('acPrep'); if(!b) return;
   b.className = 'ac-prof ac-prep' + (PREP ? ' on' : '');
   if(PREP) b.textContent = PREP.titulo || 'PREP';
+}
+function prepUpload(file){          // el profe elige el .json {titulo, preguntas[]} y se guarda en Firebase /prep (solo su cuenta puede)
+  if(!file || !isProf()) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    var j; try{ j = JSON.parse(rd.result); }catch(e){ alert('El archivo no es un JSON válido.'); return; }
+    if(!j || !j.preguntas || !j.preguntas.length){ alert('El JSON debe traer {titulo, preguntas:[...]}.'); return; }
+    getToken().then(function(tok){
+      return fetch(FIREBASE_DB_URL + '/prep.json?auth=' + tok, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(j) });
+    }).then(function(r){ if(!r.ok) throw new Error(r.status); PREP = j; renderPrepBtn(); alert('Banco guardado: ' + j.preguntas.length + ' preguntas.'); })
+      .catch(function(e){ alert('No se pudo guardar (' + e.message + ').'); });
+  };
+  rd.readAsText(file);
 }
 function startPrep(){
   if(!PREP) return;
