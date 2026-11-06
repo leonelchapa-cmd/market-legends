@@ -1577,7 +1577,7 @@ function syncBest(tok){         // baja los mejores puntajes de la cuenta (por s
   return Promise.all([a,b]);
 }
 function logout(silent){
-  auth = null; storeAuth(); playerName = ''; playerId = ''; best = 0; bestInf = 0; save();
+  auth = null; storeAuth(); playerName = ''; playerId = ''; best = 0; bestInf = 0; save(); PREP = null;   // el banco privado se olvida al cerrar sesión
   try{ localStorage.removeItem('ml_synced'); localStorage.removeItem('ml_synced_inf'); }catch(e){}
   if(!silent) goMenu();
 }
@@ -1657,18 +1657,20 @@ function showReview(){
   });
   L.scrollTop = 0; show('reviewScreen');
 }
-function loadPrep(){
-  if(!isProf() || !FIREBASE_DB_URL) return;
+function loadPrep(cb){
+  if(!isProf() || !FIREBASE_DB_URL){ if(cb) cb('Entra con la cuenta del profe.'); return; }
   getToken().then(function(tok){ return fetch(FIREBASE_DB_URL + '/prep.json?auth=' + tok); })
-    .then(function(r){ return r.json(); })
+    .then(function(r){ if(!r.ok) throw new Error('Firebase respondió ' + r.status); return r.json(); })
     .then(function(j){ if(typeof j === 'string'){ try{ j = JSON.parse(j); }catch(e){ j = null; } }   // en la consola de Firebase se pegó como texto
-      if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); } })
-    .catch(function(){});
+      if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); if(cb) cb(null); }
+      else { renderPrepBtn(); if(cb) cb('No hay banco en Firebase (/prep vacío).'); } })
+    .catch(function(e){ renderPrepBtn(); if(cb) cb('No se pudo bajar el banco: ' + (e && e.message ? e.message : e)); });
 }
 function renderPrepBtn(){
   var b = document.getElementById('acPrep'); if(!b) return;
-  b.className = 'ac-prof ac-prep' + (PREP ? ' on' : '');
-  if(PREP) b.textContent = PREP.titulo || 'PREP';
+  if(!isProf()) PREP = null;                                   // el banco privado nunca se queda en memoria para otra cuenta
+  b.className = 'ac-prof ac-prep' + (isProf() ? ' on' : '');   // el profe siempre ve el botón; si no cargó, al tocarlo dice por qué
+  b.textContent = PREP ? (PREP.titulo || 'PREP') : 'PREP (SIN BANCO)';
 }
 function prepUpload(file){          // el profe elige el .json {titulo, preguntas[]} y se guarda en Firebase /prep (solo su cuenta puede)
   if(!file || !isProf()) return;
@@ -1684,7 +1686,8 @@ function prepUpload(file){          // el profe elige el .json {titulo, pregunta
   rd.readAsText(file);
 }
 function startPrep(){
-  if(!PREP) return;
+  if(!isProf()) return;
+  if(!PREP){ loadPrep(function(err){ if(err) alert(err); else startPrep(); }); return; }
   goMenu(); mode = 'prep'; torMode = false;
   startGame();
 }
