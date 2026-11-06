@@ -1036,7 +1036,7 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  if(mode==='prep'){ rQ = shuffle(PREP.preguntas.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]/.test(q.q) ? 150 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 150 s   // prep: 30 del banco privado, con explicación
+  if(mode==='prep'){ rQ = shuffle(PREP.preguntas.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]|GBP|\d+[.,]\d+|¿cuánto|¿cuál es el precio|ganancia|pérdida/i.test(q.q) ? 240 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 240 s   // prep: 30 del banco privado, con explicación
   else if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
   else { rQ = withGen(buildRun(catPool(selCat)), selCat); }   // normal/torneo: 25 preguntas del tema elegido (0 = todas), una de cálculo por nivel si hay Portafolios
   renderLives(); renderHi();
