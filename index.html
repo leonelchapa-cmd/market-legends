@@ -1662,6 +1662,11 @@ function loadPrep(cb){
   getToken().then(function(tok){ return fetch(FIREBASE_DB_URL + '/prep.json?auth=' + tok); })
     .then(function(r){ if(!r.ok) throw new Error('Firebase respondió ' + r.status); return r.json(); })
     .then(function(j){ if(typeof j === 'string'){ try{ j = JSON.parse(j); }catch(e){ j = null; } }   // en la consola de Firebase se pegó como texto
+      if(j && typeof j === 'object'){                                   // el banco puede venir en trozos: preguntas, preguntas2, preguntas3...
+        var all = []; Object.keys(j).filter(function(k){ return /^preguntas\d*$/.test(k); }).sort(function(a,b){ return (parseInt(a.slice(9))||1) - (parseInt(b.slice(9))||1); })
+          .forEach(function(k){ var arr = j[k]; if(arr && typeof arr === 'object' && !Array.isArray(arr)) arr = Object.keys(arr).sort(function(a,b){ return a-b; }).map(function(i){ return arr[i]; }); if(Array.isArray(arr)) all = all.concat(arr.filter(Boolean)); });
+        if(all.length) j.preguntas = all;
+      }
       if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); if(cb) cb(null); }
       else { renderPrepBtn(); if(cb) cb('No hay banco en Firebase (/prep vacío).'); } })
     .catch(function(e){ renderPrepBtn(); if(cb) cb('No se pudo bajar el banco: ' + (e && e.message ? e.message : e)); });
