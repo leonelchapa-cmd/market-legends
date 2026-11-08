@@ -410,8 +410,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .pf-row-big.two .cat-btn{min-height:50px;font-size:11.5px;letter-spacing:.5px;padding:4px 6px;}
 .pf-row-big.two .cat-btn:first-child{grid-column:1 / -1;}
 .life-inf{font-family:'Katahdin','Fredoka One',cursive;font-size:22px;color:#FFD54F;margin-left:4px;text-shadow:0 2px 4px rgba(0,0,0,.3);line-height:1;}
-.exp-ref{font-size:11px;color:#5D4037;margin-top:8px;padding-top:6px;border-top:1px dashed rgba(0,0,0,.18);line-height:1.35;text-align:left;}
-.rv-ref{font-size:10.5px;color:#6D4C41;margin-top:4px;}
+.exp-ref{font-size:11px;color:#5D4037;margin-top:8px;padding-top:6px;border-top:1px dashed rgba(0,0,0,.18);line-height:1.35;text-align:left;white-space:pre-line;max-height:34vh;overflow-y:auto;}
+.rv-ref{font-size:10.5px;color:#6D4C41;margin-top:4px;white-space:pre-line;}
 .cat-sub{display:block;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:0;opacity:.85;margin-top:1px;}
 @media (min-width:700px) and (pointer:fine){ #catScreen{justify-content:center;} }
 .pf-title{font-family:'Katahdin','Fredoka One',cursive;font-size:28px;color:#fff;letter-spacing:3px;margin-top:64px;position:relative;z-index:5;text-shadow:0 3px 10px rgba(0,0,0,.3);}
@@ -1910,7 +1910,7 @@ function showReview(){
     d.querySelector('.rv-ok').textContent = '✓ ' + m.q.opts[m.q.c];
     d.querySelector('.rv-bad').textContent = m.chosen ? '✗ Tu respuesta: ' + m.chosen : '✗ Se acabó el tiempo';
     if(m.q.e) d.querySelector('.rv-e').textContent = m.q.e;
-    var ref = m.q.topic ? prepRef(m.q) : ''; if(ref){ var r = document.createElement('div'); r.className = 'rv-ref'; r.textContent = ref; d.appendChild(r); }
+    var ref = [m.q.topic ? prepRef(m.q) : '', m.q.m ? 'Del material. ' + m.q.m : ''].filter(Boolean).join(String.fromCharCode(10) + String.fromCharCode(10)); if(ref){ var r = document.createElement('div'); r.className = 'rv-ref'; r.textContent = ref; d.appendChild(r); }
     L.appendChild(d);
   });
   L.scrollTop = 0; show('reviewScreen');
@@ -1980,7 +1980,7 @@ function showExp(right){
   document.getElementById('expTitle').textContent = right ? 'CORRECTO' : 'INCORRECTO';
   document.getElementById('expTopic').textContent = q.topic || CATS[q.cat] || '';
   document.getElementById('expTxt').textContent = q.e || '';
-  var ref = (mode === 'prep' && !right) ? prepRef(q) : ''; var re = document.getElementById('expRef'); re.textContent = ref; re.style.display = ref ? '' : 'none';
+  var ref = (mode === 'prep') ? [(!right ? prepRef(q) : ''), (q.m ? 'Del material. ' + q.m : '')].filter(Boolean).join(String.fromCharCode(10) + String.fromCharCode(10)) : ''; var re = document.getElementById('expRef'); re.textContent = ref; re.style.display = ref ? '' : 'none';
   document.getElementById('expTxt').scrollTop = 0;
   document.getElementById('expOverlay').classList.add('active');
 }
