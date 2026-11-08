@@ -1852,7 +1852,7 @@ function loadPrep(cb){
           if(t.indexOf(String.fromCharCode(10)) >= 0) return t.split(String.fromCharCode(10)).map(rows).join(String.fromCharCode(10));
           var nums = t.match(/-?\d[\d.,]*%?/g) || [];
           if(nums.length < 3) return t;
-          return t.replace(/(\d[\d.,]*%?\)?(?:\s+(?:million|billion|thousand|units|years|days|months|shares|percent|bps))?)\s+(?=[A-Z][A-Za-z'()\/-]*(?:\s+[A-Za-z'()\/:-]+){0,8}\s*:?\s*-?[\d$€£])/g, '$1' + String.fromCharCode(10));
+          return t.replace(/(\d[\d.,]*%?\)?(?:\s+(?:million|billion|thousand|units|years|days|months|shares|percent|bps))?|\))\s+(?=[A-Z][A-Za-z'()\/-]*(?:\s+[A-Za-z'()\/:-]+){0,8}\s*:?\s*-?[\d$€£])/g, '$1' + String.fromCharCode(10));
         };
         if(j.preguntas) j.preguntas.forEach(function(q){ if(!q) return; q.q = rows(tidy(q.q)); q.e = tidy(q.e); if(q.opts) q.opts = q.opts.map(tidy); });
         if(j.preguntas) j.preguntas = j.preguntas.filter(function(q){        // descarta preguntas mal armadas por el OCR
