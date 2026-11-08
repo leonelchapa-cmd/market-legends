@@ -1844,7 +1844,7 @@ function loadPrep(cb){
           if(typeof t !== 'string') return t;
           t = t.replace(/\bE(?=[0-9l]\.\d)/g, '€').replace(/€l\./g, '€1.').replace(/\$l\./g, '$1.');
           t = t.replace(/\bEIO\b/g, '€10').replace(/\bEl(?=\d)/g, '€1').replace(/\bE(?=\d{1,3}(?:[.,]\d+)?\s*(?:million|billion|thousand|per\b))/g, '€');
-          t = t.replace(/\n(?=[a-z])/g, ' ');
+          t = t.replace(/\n[ \t]*(?=[a-z])/g, ' ');
           t = t.replace(/\b[ABC] is (correct|incorrect)\b(\s+because)?\s*[\.:,]?\s*/g, '');
           t = t.replace(/(\d)\s*0\/0/g, '$1%').replace(/[ \t]{2,}/g, ' ').replace(/\s+([,\.;:])/g, '$1');
           return t.trim();
@@ -1856,7 +1856,7 @@ function loadPrep(cb){
           if(nums.length < 3) return t;
           return t.replace(/(\d[\d.,]*%?\)?(?:\s+(?:million|billion|thousand|units|years|days|months|shares|percent|bps))?|\))\s+(?=[A-Z][A-Za-z'()\/-]*(?:\s+[A-Za-z'()\/:-]+){0,8}\s*:?\s*-?[\d$€£])/g, '$1' + String.fromCharCode(10));
         };
-        if(j.preguntas) j.preguntas.forEach(function(q){ if(!q) return; q.q = rows(tidy(q.q)); q.e = tidy(q.e); if(q.opts) q.opts = q.opts.map(tidy); });
+        if(j.preguntas) j.preguntas.forEach(function(q){ if(!q) return; q.q = rows(tidy(q.q)); q.e = tidy(q.e); if(q.opts) q.opts = q.opts.map(function(o){ o = tidy(o); return /[A-Za-z]/.test(o) ? o : o.replace(/\.$/, ''); }); });   // "13.00." -> "13.00"
         if(j.preguntas) j.preguntas = j.preguntas.filter(function(q){        // descarta preguntas mal armadas por el OCR
           if(!q || !q.q || !q.opts || q.opts.length < 3) return false;
           if(/^PP\d/.test(q.src || '') && q.q.indexOf(' | ') >= 0) return false;   // tablas de los packs escaneados: el OCR las revuelve
