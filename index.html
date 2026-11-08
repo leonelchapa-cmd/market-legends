@@ -498,9 +498,14 @@ body.prep .ans .txt{font-size:14px;}
 .fm-sec small{font-family:'RalewayG','Nunito',sans-serif;letter-spacing:0;font-size:11px;color:#9E9E9E;margin-left:6px;}
 .fm-item{padding:7px 4px 8px;border-bottom:1px solid rgba(0,0,0,.06);}
 .fm-name{font-weight:700;font-size:13px;color:#3E2723;line-height:1.3;}
-.fm-eq{font-family:Consolas,Menlo,monospace;font-size:13px;color:#1B5E20;background:#F1F8E9;border-radius:6px;padding:4px 8px;margin-top:4px;white-space:pre-line;line-height:1.4;}
+.fm-eq{font-family:'Cambria','Times New Roman',Georgia,serif;font-size:16px;color:#1B5E20;background:#F1F8E9;border-radius:8px;padding:7px 10px;margin-top:5px;text-align:center;line-height:1.6;word-wrap:break-word;}
+.fm-eq sup,.fm-eq sub{font-size:68%;line-height:0;}
+.fm-eq .fr{display:inline-block;vertical-align:middle;text-align:center;padding:0 2px;line-height:1.25;}
+.fm-eq .fn{display:block;border-bottom:1.3px solid #2E7D32;padding:0 4px 1px;}
+.fm-eq .fd{display:block;padding:1px 4px 0;}
+.fm-eq .fr .fr{font-size:90%;}
 .fm-note{font-size:11.5px;color:#5D4037;margin-top:3px;line-height:1.3;}
-@media (min-width:700px) and (pointer:fine){ .phone .fm-eq{font-size:14px;} .phone .fm-name{font-size:14px;} }
+@media (min-width:700px) and (pointer:fine){ .phone .fm-eq{font-size:17px;} .phone .fm-name{font-size:14px;} }
 </style>
 </head>
 <body>
@@ -1341,6 +1346,7 @@ function next(){ cur++; loadQ(); }
 function loseLife(){
   lives--; renderLives();
   setTimeout(function(){
+    if(mode === 'prep' && lives <= 0){ lives = ARC.lives; renderLives(); }   // PREP: es para estudiar, nunca se acaba por vidas
     if(lives > 0){ next(); return; }
     if(!contUsed && coins >= ARC.contCost){ showContinue(); return; }
     showResult(false);
@@ -1671,133 +1677,149 @@ function needMore(){               // el tema con peor acierto (mínimo 5 contes
 // ---------- FORMULARIO (Level I, en español) ----------
 var FORMULAS = [
  {t:'Valor del dinero en el tiempo', items:[
-  ['Valor futuro de una suma','VF = VP × (1 + r)ⁿ','r = tasa por periodo, n = número de periodos.'],
-  ['Valor presente de una suma','VP = VF / (1 + r)ⁿ',''],
-  ['Capitalización m veces al año','VF = VP × (1 + r/m)^(m·n)','Trimestral: m = 4; mensual: m = 12. Continua: VF = VP × e^(r·n).'],
-  ['Tasa efectiva anual (EAR)','EAR = (1 + r/m)^m − 1','Compara tasas con distinta frecuencia de capitalización.'],
-  ['VP de una anualidad ordinaria','VP = A × [1 − (1 + r)^−n] / r','Pagos al final de cada periodo. Anualidad anticipada: multiplica por (1 + r).'],
-  ['VF de una anualidad ordinaria','VF = A × [(1 + r)ⁿ − 1] / r',''],
-  ['Perpetuidad','VP = A / r','Perpetuidad creciente: VP = A₁ / (r − g).'],
-  ['Rendimiento del periodo de tenencia','HPR = (P₁ − P₀ + ingresos) / P₀',''],
-  ['Media geométrica (rendimiento compuesto)','R_G = [(1+R₁)(1+R₂)…(1+Rₙ)]^(1/n) − 1',''],
+  ['Valor futuro de una suma','VF = VP × (1 + r)^{n}','r = tasa por periodo, n = número de periodos.'],
+  ['Valor presente de una suma','VP = {VF}/{(1 + r)^{n}}',''],
+  ['Capitalización m veces al año','VF = VP × (1 + {r}/{m})^{m·n}','Trimestral: m = 4; mensual: m = 12. Continua: VF = VP × e^{r·n}.'],
+  ['Tasa efectiva anual (EAR)','EAR = (1 + {r}/{m})^{m} − 1','Compara tasas con distinta frecuencia de capitalización.'],
+  ['VP de una anualidad ordinaria','VP = A × {1 − (1 + r)^{−n}}/{r}','Pagos al final de cada periodo. Anualidad anticipada: multiplica por (1 + r).'],
+  ['VF de una anualidad ordinaria','VF = A × {(1 + r)^{n} − 1}/{r}',''],
+  ['Perpetuidad','VP = {A}/{r}','Perpetuidad creciente: VP = A₁ / (r − g).'],
+  ['Rendimiento del periodo de tenencia','HPR = {P₁ − P₀ + ingresos}/{P₀}',''],
+  ['Media geométrica (rendimiento compuesto)','R_{G} = [(1 + R₁)(1 + R₂) … (1 + Rₙ)]^{1/n} − 1',''],
   ['Rendimiento ponderado por dinero','TIR de los flujos de la cuenta (depósitos −, retiros +)','En la calculadora: CF0, CFj, IRR.'],
  ]},
  {t:'Estadística y probabilidad', items:[
-  ['Media aritmética','X̄ = ΣXᵢ / n',''],
-  ['Varianza muestral','s² = Σ(Xᵢ − X̄)² / (n − 1)','Poblacional: divide entre n. Desviación estándar = √varianza.'],
-  ['Coeficiente de variación','CV = s / X̄','Riesgo por unidad de rendimiento; menor es mejor.'],
-  ['Posición de un percentil','L_y = (n + 1) × y / 100','Luego interpola entre las observaciones vecinas.'],
-  ['Covarianza y correlación','Cov(X,Y) = Σ(Xᵢ − X̄)(Yᵢ − Ȳ) / (n − 1)\nρ = Cov(X,Y) / (σ_X × σ_Y)','ρ va de −1 a +1.'],
-  ['Probabilidad condicional','P(A | B) = P(AB) / P(B)',''],
+  ['Media aritmética','X̄ = {ΣXᵢ}/{n}',''],
+  ['Varianza muestral','s² = {Σ(Xᵢ − X̄)²}/{n − 1}','Poblacional: divide entre n. Desviación estándar = √varianza.'],
+  ['Coeficiente de variación','CV = {s}/{X̄}','Riesgo por unidad de rendimiento; menor es mejor.'],
+  ['Posición de un percentil','L_{y} = (n + 1) × {y}/{100}','Luego interpola entre las observaciones vecinas.'],
+  ['Covarianza y correlación','Cov(X,Y) = {Σ(Xᵢ − X̄)(Yᵢ − Ȳ)}/{n − 1}\nρ = {Cov(X,Y)}/{σ_{X} σ_{Y}}','ρ va de −1 a +1.'],
+  ['Probabilidad condicional','P(A | B) = {P(AB)}/{P(B)}',''],
   ['Regla de la multiplicación','P(AB) = P(A | B) × P(B)','Independientes: P(AB) = P(A) × P(B).'],
   ['Regla de la suma','P(A o B) = P(A) + P(B) − P(AB)',''],
   ['Probabilidad total','P(A) = P(A|S₁)P(S₁) + P(A|S₂)P(S₂) + …','Escenarios S mutuamente excluyentes y exhaustivos.'],
-  ['Teorema de Bayes','P(S | A) = P(A | S) × P(S) / P(A)',''],
+  ['Teorema de Bayes','P(S | A) = {P(A | S) × P(S)}/{P(A)}',''],
   ['Valor esperado y varianza de una variable','E(X) = Σ pᵢ Xᵢ\nσ² = Σ pᵢ [Xᵢ − E(X)]²',''],
-  ['Binomial (n ensayos, prob. p)','P(x) = C(n,x) × pˣ × (1−p)^(n−x)\nE(X) = n·p,  σ² = n·p·(1−p)',''],
-  ['Intervalo de confianza','X̄ ± z × σ/√n   (σ conocida)\nX̄ ± t × s/√n   (σ desconocida)','z = 1.65 (90%), 1.96 (95%), 2.58 (99%).'],
-  ['Estadístico t para la media','t = (X̄ − μ₀) / (s/√n)','gl = n − 1.'],
-  ['Error estándar de la media','σ_X̄ = σ / √n',''],
-  ['Regresión lineal simple','Y = b₀ + b₁X + ε\nb₁ = Cov(X,Y) / Var(X),  b₀ = Ȳ − b₁X̄','R² = (correlación)² en regresión simple.'],
-  ['Normal: intervalos','68% en ±1σ, 95% en ±2σ, 99% en ±3σ',''],
-  ['Roy: razón de seguridad primero','SFRatio = [E(R_P) − R_L] / σ_P','Mayor es mejor; R_L = nivel mínimo aceptable.'],
+  ['Binomial (n ensayos, prob. p)','P(x) = C(n,x) × p^{x} × (1 − p)^{n−x}\nE(X) = n·p,  σ² = n·p·(1 − p)',''],
+  ['Intervalo de confianza','X̄ ± z × {σ}/{√n}   (σ conocida)\nX̄ ± t × {s}/{√n}   (σ desconocida)','z = 1.65 (90%), 1.96 (95%), 2.58 (99%).'],
+  ['Estadístico t para la media','t = {X̄ − μ₀}/{s / √n}','gl = n − 1.'],
+  ['Error estándar de la media','σ_{X̄} = {σ}/{√n}',''],
+  ['Regresión lineal simple','Y = b₀ + b₁X + ε\nb₁ = {Cov(X,Y)}/{Var(X)},   b₀ = Ȳ − b₁X̄','R² = (correlación)² en regresión simple.'],
+  ['Normal: intervalos','68% en ±1σ,  95% en ±2σ,  99% en ±3σ',''],
+  ['Roy: razón de seguridad primero','SFRatio = {E(R_{P}) − R_{L}}/{σ_{P}}','Mayor es mejor; R_L = nivel mínimo aceptable.'],
  ]},
  {t:'Economía', items:[
-  ['Elasticidad precio de la demanda','E = (%Δ cantidad) / (%Δ precio)','|E| > 1 elástica; < 1 inelástica.'],
+  ['Elasticidad precio de la demanda','E = {%Δ cantidad}/{%Δ precio}','|E| > 1 elástica; < 1 inelástica.'],
   ['Efecto Fisher','(1 + nominal) = (1 + real) × (1 + inflación)\naprox.: nominal ≈ real + inflación',''],
-  ['Multiplicador del dinero','m = 1 / coeficiente de reserva',''],
+  ['Multiplicador del dinero','m = {1}/{coeficiente de reserva}',''],
   ['Ecuación cuantitativa','M × V = P × Y',''],
   ['PIB por el gasto','PIB = C + I + G + (X − M)',''],
-  ['Tipo de cambio cruzado','A/C = (A/B) × (B/C)','Cotización A/B = unidades de A por una unidad de B.'],
-  ['Forward y paridad de tasas','F = S × (1 + r_precio) / (1 + r_base)','Primo/descuento forward = F − S.'],
-  ['Tipo de cambio real','Real = Nominal × (P_extranjero / P_doméstico)','En términos de la cotización A/B, con índices de precios.'],
+  ['Tipo de cambio cruzado','{A}/{C} = {A}/{B} × {B}/{C}','Cotización A/B = unidades de A por una unidad de B.'],
+  ['Forward y paridad de tasas','F = S × {1 + r_{precio}}/{1 + r_{base}}','Prima o descuento forward = F − S.'],
+  ['Tipo de cambio real','Real = Nominal × {P_{extranjero}}/{P_{doméstico}}','En términos de la cotización A/B, con índices de precios.'],
  ]},
  {t:'Estados financieros', items:[
   ['Ecuación contable','Activos = Pasivos + Capital',''],
-  ['Margen bruto, operativo y neto','Margen = Utilidad (bruta / operativa / neta) / Ventas',''],
-  ['ROE y ROA','ROE = Utilidad neta / Capital promedio\nROA = Utilidad neta / Activos promedio',''],
-  ['DuPont (3 factores)','ROE = Margen neto × Rotación de activos × Apalancamiento\n= (UN/Ventas) × (Ventas/Activos) × (Activos/Capital)',''],
-  ['Razón circulante y prueba ácida','Circulante = AC / PC\nÁcida = (Efectivo + Inversiones + CxC) / PC',''],
-  ['Rotaciones y días','Rotación de inventario = Costo de ventas / Inv. promedio\nDías de inventario = 365 / rotación\nDías de cobro = 365 / (Ventas / CxC prom.)\nDías de pago = 365 / (Compras / CxP prom.)',''],
+  ['Margen bruto, operativo y neto','Margen = {Utilidad (bruta / operativa / neta)}/{Ventas}',''],
+  ['ROE y ROA','ROE = {Utilidad neta}/{Capital promedio}      ROA = {Utilidad neta}/{Activos promedio}',''],
+  ['DuPont (3 factores)','ROE = Margen neto × Rotación de activos × Apalancamiento\n= {UN}/{Ventas} × {Ventas}/{Activos} × {Activos}/{Capital}',''],
+  ['Razón circulante y prueba ácida','Circulante = {AC}/{PC}      Ácida = {Efectivo + Inversiones + CxC}/{PC}',''],
+  ['Rotaciones y días','Rotación de inventario = {Costo de ventas}/{Inventario promedio}\nDías de inventario = {365}/{rotación}\nDías de cobro = {365}/{Ventas / CxC prom.}      Días de pago = {365}/{Compras / CxP prom.}',''],
   ['Ciclo de conversión de efectivo','CCE = Días inventario + Días cobro − Días pago',''],
-  ['Cobertura de intereses','EBIT / Gasto por intereses',''],
-  ['Deuda a capital y a activos','D/E = Deuda / Capital\nPeso de la deuda = D / (D + E) = (D/E) / (1 + D/E)',''],
-  ['UPA básica y diluida','UPA = (UN − Div. preferentes) / Acciones promedio\nDiluida: ajusta numerador y denominador por convertibles y opciones (método de acciones de tesorería)',''],
+  ['Cobertura de intereses','{EBIT}/{Gasto por intereses}',''],
+  ['Deuda a capital y a activos','{D}/{E} = {Deuda}/{Capital}      Peso de la deuda = {D}/{D + E} = {D/E}/{1 + D/E}',''],
+  ['UPA básica y diluida','UPA = {UN − Div. preferentes}/{Acciones promedio}\nDiluida: ajusta numerador y denominador por convertibles y opciones (método de acciones de tesorería)',''],
   ['Flujo de efectivo libre','FCFF = CFO + Int × (1 − t) − CapEx\nFCFE = CFO − CapEx + Deuda neta emitida',''],
-  ['Depreciación en línea recta','(Costo − Valor residual) / Vida útil',''],
+  ['Depreciación en línea recta','{Costo − Valor residual}/{Vida útil}',''],
  ]},
  {t:'Finanzas corporativas', items:[
-  ['VPN y TIR','VPN = Σ FCₜ / (1 + r)ᵗ − Inversión\nTIR: tasa que hace VPN = 0','Acepta si VPN > 0 (o TIR > costo de capital).'],
-  ['Costo promedio ponderado de capital','WACC = w_d × r_d × (1 − t) + w_p × r_p + w_e × r_e',''],
-  ['Costo del capital (CAPM)','r_e = r_f + β × (R_m − r_f)',''],
-  ['Costo del capital (dividendos)','r_e = D₁ / P₀ + g',''],
-  ['Costo de la preferente','r_p = Dividendo preferente / Precio',''],
-  ['Grado de apalancamiento operativo','DOL = Q(P − V) / [Q(P − V) − F]','% cambio en utilidad operativa por % cambio en ventas.'],
-  ['Grado de apalancamiento financiero','DFL = EBIT / (EBIT − Intereses)',''],
+  ['VPN y TIR','VPN = Σ {FC_{t}}/{(1 + r)^{t}} − Inversión\nTIR: tasa que hace VPN = 0','Acepta si VPN > 0 (o TIR > costo de capital).'],
+  ['Costo promedio ponderado de capital','WACC = w_{d} r_{d} (1 − t) + w_{p} r_{p} + w_{e} r_{e}',''],
+  ['Costo del capital (CAPM)','r_{e} = r_{f} + β × (R_{m} − r_{f})',''],
+  ['Costo del capital (dividendos)','r_{e} = {D₁}/{P₀} + g',''],
+  ['Costo de la preferente','r_{p} = {Dividendo preferente}/{Precio}',''],
+  ['Grado de apalancamiento operativo','DOL = {Q(P − V)}/{Q(P − V) − F}','% cambio en utilidad operativa por % cambio en ventas.'],
+  ['Grado de apalancamiento financiero','DFL = {EBIT}/{EBIT − Intereses}',''],
   ['Grado de apalancamiento total','DTL = DOL × DFL',''],
-  ['Punto de equilibrio','Q_BE = (Costos fijos operativos + Costos fijos financieros) / (P − V)\nQ_OBE (operativo) = Costos fijos operativos / (P − V)',''],
+  ['Punto de equilibrio','Q_{BE} = {Costos fijos operativos + Costos fijos financieros}/{P − V}\nQ_{OBE} (operativo) = {Costos fijos operativos}/{P − V}',''],
   ['Periodo de recuperación','Años hasta que los flujos acumulados igualan la inversión',''],
  ]},
  {t:'Renta variable', items:[
-  ['Modelo de Gordon','P₀ = D₁ / (r − g) = D₀ × (1 + g) / (r − g)','Requiere r > g.'],
+  ['Modelo de Gordon','P₀ = {D₁}/{r − g} = {D₀ × (1 + g)}/{r − g}','Requiere r > g.'],
   ['Crecimiento sostenible','g = b × ROE','b = tasa de retención = 1 − payout.'],
-  ['DDM de dos etapas','P₀ = Σ Dₜ/(1+r)ᵗ + [D_{n+1}/(r − g)] / (1+r)ⁿ',''],
-  ['P/U justificado','P₀/E₁ = payout / (r − g)',''],
-  ['Múltiplos','P/U = Precio / UPA;  P/VL = Precio / Valor en libros por acción;  P/Ventas;  EV/EBITDA\nEV = Cap. de mercado + Deuda + Preferentes − Efectivo',''],
-  ['Preferente perpetua','P = Dividendo / r',''],
-  ['Rendimiento de un índice','Índice ponderado por precio: suma de precios / divisor\nEqual-weighted: promedio simple de los rendimientos\nPor capitalización: Σ(P × Q) / divisor',''],
-  ['Compra con margen','Apalancamiento = 1 / margen inicial\nPrecio de llamada de margen = P₀ × (1 − margen inicial) / (1 − margen de mantenimiento)',''],
+  ['DDM de dos etapas','P₀ = Σ {D_{t}}/{(1 + r)^{t}} + {D_{n+1} / (r − g)}/{(1 + r)^{n}}',''],
+  ['P/U justificado','{P₀}/{E₁} = {payout}/{r − g}',''],
+  ['Múltiplos','P/U = {Precio}/{UPA}    P/VL = {Precio}/{Valor en libros por acción}    P/Ventas    EV/EBITDA\nEV = Cap. de mercado + Deuda + Preferentes − Efectivo',''],
+  ['Preferente perpetua','P = {Dividendo}/{r}',''],
+  ['Rendimiento de un índice','Ponderado por precio: {Σ precios}/{divisor}\nEqual-weighted: promedio simple de los rendimientos\nPor capitalización: {Σ(P × Q)}/{divisor}',''],
+  ['Compra con margen','Apalancamiento = {1}/{margen inicial}\nPrecio de llamada de margen = P₀ × {1 − margen inicial}/{1 − margen de mantenimiento}',''],
  ]},
  {t:'Renta fija', items:[
-  ['Precio de un bono','P = Σ Cupón/(1+y)ᵗ + Nominal/(1+y)ⁿ','En la calculadora: N, I/Y, PMT, FV → PV.'],
-  ['Rendimiento corriente','Cupón anual / Precio',''],
-  ['Duración modificada','Dur. mod. = Dur. Macaulay / (1 + y/m)',''],
-  ['Duración aproximada','Dur. aprox. = (P₋ − P₊) / (2 × P₀ × Δy)',''],
-  ['Cambio de precio con duración y convexidad','%ΔP ≈ −Dur.mod × Δy + ½ × Convexidad × (Δy)²',''],
-  ['Duración en dinero y PVBP','Dur. en dinero = Dur. mod × Precio total\nPVBP = Dur. en dinero × 0.0001',''],
+  ['Precio de un bono','P = Σ {Cupón}/{(1 + y)^{t}} + {Nominal}/{(1 + y)^{n}}','En la calculadora: N, I/Y, PMT, FV → PV.'],
+  ['Rendimiento corriente','{Cupón anual}/{Precio}',''],
+  ['Duración modificada','Dur. mod. = {Dur. Macaulay}/{1 + y/m}',''],
+  ['Duración aproximada','Dur. aprox. = {P₋ − P₊}/{2 × P₀ × Δy}',''],
+  ['Cambio de precio con duración y convexidad','%ΔP ≈ −Dur. mod. × Δy + ½ × Convexidad × (Δy)²',''],
+  ['Duración en dinero y PVBP','Dur. en dinero = Dur. mod. × Precio total\nPVBP = Dur. en dinero × 0.0001',''],
   ['Tasa spot y forward','(1 + s₂)² = (1 + s₁)(1 + f₁,₁)','f₁,₁ = forward de un año dentro de un año.'],
-  ['Precio con tasas forward','P = Σ FCₜ / [(1+f₀)(1+f₁)…(1+f_{t−1})]',''],
-  ['Valor presente de los puntos base','Spread: diferencia de rendimiento vs. bono de referencia',''],
-  ['Rendimiento de instrumentos de mercado de dinero','Tasa de descuento: (Nominal − P)/Nominal × 360/días\nTasa add-on: (Nominal − P)/P × 365/días',''],
+  ['Precio con tasas forward','P = Σ {FC_{t}}/{(1 + f₀)(1 + f₁) … (1 + f_{t−1})}',''],
+  ['Spread','Diferencia de rendimiento vs. bono de referencia',''],
+  ['Rendimiento de instrumentos de mercado de dinero','Tasa de descuento = {Nominal − P}/{Nominal} × {360}/{días}\nTasa add-on = {Nominal − P}/{P} × {365}/{días}',''],
  ]},
  {t:'Derivados', items:[
-  ['Pago de una call al vencer','c_T = máx(0, S_T − X)','Ganancia = pago − prima. Equilibrio: X + prima.'],
-  ['Pago de una put al vencer','p_T = máx(0, X − S_T)','Ganancia = pago − prima. Equilibrio: X − prima.'],
-  ['Paridad put-call','c + X/(1+r)ᵀ = p + S','Acción + put = call + bono cupón cero (fiduciary call).'],
-  ['Precio forward sin arbitraje','F₀ = S₀ × (1 + r)ᵀ','Con costo de acarreo: F₀ = (S₀ + VP costos − VP beneficios) × (1+r)ᵀ.'],
-  ['Valor de un forward antes de vencer','V_t = S_t − F₀ / (1 + r)^(T−t)','Para la parte larga.'],
-  ['Binomial: razón de cobertura','h = (c_u − c_d) / (S_u − S_d)','Acciones por call vendida para que la cartera valga lo mismo en ambos escenarios.'],
-  ['Binomial: probabilidad neutral al riesgo','π = (1 + r − R_d) / (R_u − R_d)','R_u = S_u/S₀, R_d = S_d/S₀.'],
-  ['Binomial: precio de la opción','c₀ = [π × c_u + (1 − π) × c_d] / (1 + r)','Mismo resultado que cubrir con h acciones y descontar.'],
-  ['Cotas de una call europea','máx(0, S − X/(1+r)ᵀ) ≤ c ≤ S',''],
-  ['Cotas de una put europea','máx(0, X/(1+r)ᵀ − S) ≤ p ≤ X/(1+r)ᵀ',''],
-  ['Factores de la prima','Spot ↑: call ↑, put ↓.  Ejercicio ↑: call ↓, put ↑.\nPlazo ↑: ambas ↑.  Volatilidad ↑: ambas ↑.  Tasa ↑: call ↑, put ↓.',''],
+  ['Pago de una call al vencer','c_{T} = máx(0, S_{T} − X)','Ganancia = pago − prima. Equilibrio: X + prima.'],
+  ['Pago de una put al vencer','p_{T} = máx(0, X − S_{T})','Ganancia = pago − prima. Equilibrio: X − prima.'],
+  ['Paridad put-call','c + {X}/{(1 + r)^{T}} = p + S\nc = p + S − {X}/{(1 + r)^{T}}\np = c + {X}/{(1 + r)^{T}} − S\nc − p = S − {X}/{(1 + r)^{T}}','Call fiduciaria (call + bono) = put protectora (put + acción). Las otras tres son los despejes: call, put y forward sintético.'],
+  ['Precio forward sin arbitraje','F₀ = S₀ × (1 + r)^{T}','Con costo de acarreo: F₀ = (S₀ + VP costos − VP beneficios) × (1 + r)^T.'],
+  ['Valor de un forward antes de vencer','V_{t} = S_{t} − {F₀}/{(1 + r)^{T−t}}','Para la parte larga.'],
+  ['Binomial: razón de cobertura','h = {c_{u} − c_{d}}/{S_{u} − S_{d}}','Acciones por call vendida para que la cartera valga lo mismo en ambos escenarios.'],
+  ['Binomial: probabilidad neutral al riesgo','π = {1 + r − R_{d}}/{R_{u} − R_{d}}','R_u = S_u/S₀, R_d = S_d/S₀.'],
+  ['Binomial: precio de la opción','c₀ = {π × c_{u} + (1 − π) × c_{d}}/{1 + r}','Mismo resultado que cubrir con h acciones y descontar.'],
+  ['Cotas de una call europea','máx(0, S − {X}/{(1 + r)^{T}}) ≤ c ≤ S',''],
+  ['Cotas de una put europea','máx(0, {X}/{(1 + r)^{T}} − S) ≤ p ≤ {X}/{(1 + r)^{T}}',''],
+  ['Factores de la prima','Spot ↑: call ↑, put ↓.   Ejercicio ↑: call ↓, put ↑.\nPlazo ↑: ambas ↑.   Volatilidad ↑: ambas ↑.   Tasa ↑: call ↑, put ↓.',''],
  ]},
  {t:'Inversiones alternativas', items:[
   ['Comisiones de un hedge fund','Gestión = AUM × %gestión\nIncentivo = (Ganancia − umbral) × %incentivo\nSi es neta de gestión: ganancia después de la comisión de gestión','Hurdle duro: solo sobre el exceso; suave: sobre toda la ganancia si se supera.'],
   ['Marca de agua (high-water mark)','Incentivo solo sobre ganancias por encima del máximo valor anterior',''],
-  ['Rendimiento neto del inversionista','R_neto = (Valor final − comisiones) / Valor inicial − 1',''],
+  ['Rendimiento neto del inversionista','R_{neto} = {Valor final − comisiones}/{Valor inicial} − 1',''],
  ]},
  {t:'Portafolios', items:[
-  ['Rendimiento esperado del portafolio','E(R_P) = Σ wᵢ E(Rᵢ)',''],
-  ['Varianza de dos activos','σ_P² = w₁²σ₁² + w₂²σ₂² + 2w₁w₂ρσ₁σ₂','Con ρ = 1 no hay diversificación; con ρ = −1 puede llegar a cero.'],
-  ['Beta','β = Cov(Rᵢ, R_m) / σ_m² = ρ × σᵢ / σ_m',''],
-  ['CAPM (línea del mercado de valores)','E(Rᵢ) = r_f + βᵢ × [E(R_m) − r_f]','Prima de riesgo de mercado = E(R_m) − r_f.'],
-  ['Línea de asignación de capital','E(R_P) = r_f + [E(R_m) − r_f] / σ_m × σ_P','Pendiente = razón de Sharpe del portafolio de mercado.'],
-  ['Razón de Sharpe','(R_P − r_f) / σ_P','Riesgo total.'],
-  ['Razón de Treynor','(R_P − r_f) / β_P','Riesgo sistemático.'],
-  ['Alfa de Jensen','α = R_P − [r_f + β_P × (R_m − r_f)]',''],
-  ['M² (Modigliani)','M² = (R_P − r_f) × σ_m / σ_P − (R_m − r_f)',''],
-  ['Beta del portafolio','β_P = Σ wᵢ βᵢ',''],
+  ['Rendimiento esperado del portafolio','E(R_{P}) = Σ wᵢ E(Rᵢ)',''],
+  ['Varianza de dos activos','σ_{P}² = w₁²σ₁² + w₂²σ₂² + 2w₁w₂ρσ₁σ₂','Con ρ = 1 no hay diversificación; con ρ = −1 puede llegar a cero.'],
+  ['Beta','β = {Cov(Rᵢ, R_{m})}/{σ_{m}²} = ρ × {σᵢ}/{σ_{m}}',''],
+  ['CAPM (línea del mercado de valores)','E(Rᵢ) = r_{f} + βᵢ × [E(R_{m}) − r_{f}]','Prima de riesgo de mercado = E(R_m) − r_f.'],
+  ['Línea de asignación de capital','E(R_{P}) = r_{f} + {E(R_{m}) − r_{f}}/{σ_{m}} × σ_{P}','Pendiente = razón de Sharpe del portafolio de mercado.'],
+  ['Razón de Sharpe','{R_{P} − r_{f}}/{σ_{P}}','Riesgo total.'],
+  ['Razón de Treynor','{R_{P} − r_{f}}/{β_{P}}','Riesgo sistemático.'],
+  ['Alfa de Jensen','α = R_{P} − [r_{f} + β_{P} × (R_{m} − r_{f})]',''],
+  ['M² (Modigliani)','M² = (R_{P} − r_{f}) × {σ_{m}}/{σ_{P}} − (R_{m} − r_{f})',''],
+  ['Beta del portafolio','β_{P} = Σ wᵢ βᵢ',''],
   ['Utilidad del inversionista','U = E(R) − ½ × A × σ²','A = aversión al riesgo.'],
  ]},
 ];
+function fmHtml(s){                                                      // {num}/{den} fracción apilada, ^{x} exponente, _{x} subíndice
+  var esc = function(t){ return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  var grab = function(j){ var d = 0, k = j; for(; k < s.length; k++){ if(s[k] === '{') d++; else if(s[k] === '}'){ d--; if(!d) break; } } return [s.slice(j + 1, k), k + 1]; };
+  var out = '', i = 0;
+  while(i < s.length){
+    var c = s[i];
+    if(c === '{'){ var g = grab(i), j = g[1];
+      if(s[j] === '/' && s[j + 1] === '{'){ var g2 = grab(j + 1); out += '<span class="fr"><span class="fn">' + fmHtml(g[0]) + '</span><span class="fd">' + fmHtml(g2[0]) + '</span></span>'; i = g2[1]; }
+      else { out += fmHtml(g[0]); i = j; }
+      continue; }
+    if((c === '^' || c === '_') && s[i + 1] === '{'){ var g3 = grab(i + 1); out += '<' + (c === '^' ? 'sup' : 'sub') + '>' + fmHtml(g3[0]) + '</' + (c === '^' ? 'sup' : 'sub') + '>'; i = g3[1]; continue; }
+    if(c === String.fromCharCode(10)){ out += '<br>'; i++; continue; }
+    out += esc(c); i++;
+  }
+  return out;
+}
 function renderFormulas(){
   var L = document.getElementById('frmList'); if(!L) return;
   var q = (document.getElementById('fmSearch').value || '').toLowerCase().trim();
   L.innerHTML = '';
   FORMULAS.forEach(function(sec, si){
-    var items = sec.items.filter(function(it){ return !q || (it[0] + ' ' + it[1] + ' ' + (it[2]||'') + ' ' + sec.t).toLowerCase().indexOf(q) >= 0; });
+    var items = sec.items.filter(function(it){ return !q || (it[0] + ' ' + it[1].replace(/[{}^_]/g, '') + ' ' + (it[2]||'') + ' ' + sec.t).toLowerCase().indexOf(q) >= 0; });
     if(!items.length) return;
     var open = q ? true : !!window.__fmOpen && window.__fmOpen[si];
     var h = document.createElement('div'); h.className = 'fm-sec'; h.innerHTML = (open ? '▾ ' : '▸ ') + sec.t + '<small>' + items.length + '</small>';
@@ -1807,7 +1829,7 @@ function renderFormulas(){
     items.forEach(function(it){
       var d = document.createElement('div'); d.className = 'fm-item';
       d.innerHTML = '<div class="fm-name"></div><div class="fm-eq"></div>' + (it[2] ? '<div class="fm-note"></div>' : '');
-      d.querySelector('.fm-name').textContent = it[0]; d.querySelector('.fm-eq').textContent = it[1];
+      d.querySelector('.fm-name').textContent = it[0]; d.querySelector('.fm-eq').innerHTML = fmHtml(it[1]);
       if(it[2]) d.querySelector('.fm-note').textContent = it[2];
       L.appendChild(d);
     });
