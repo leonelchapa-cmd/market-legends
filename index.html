@@ -406,6 +406,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 #catScreen{background:#3E1C63;align-items:center;justify-content:flex-start;}
 .pf-row-big{flex-direction:column;align-items:stretch;gap:10px;}
 .pf-row-big .cat-btn{min-height:52px;font-size:14px;letter-spacing:1px;}
+.pf-row-big.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pf-row-big.two .cat-btn{min-height:50px;font-size:11.5px;letter-spacing:.5px;padding:4px 6px;}
+.pf-row-big.two .cat-btn:first-child{grid-column:1 / -1;}
+.cat-sub{display:block;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:0;opacity:.85;margin-top:1px;}
 @media (min-width:700px) and (pointer:fine){ #catScreen{justify-content:center;} }
 .pf-title{font-family:'Katahdin','Fredoka One',cursive;font-size:28px;color:#fff;letter-spacing:3px;margin-top:64px;position:relative;z-index:5;text-shadow:0 3px 10px rgba(0,0,0,.3);}
 .pf-card{position:relative;z-index:5;width:92%;margin-top:14px;padding:26px 22px 22px;background:transparent center/100% 100% no-repeat;text-align:center;}
@@ -680,7 +684,7 @@ body.prep .ans .txt{font-size:14px;}
   <div class="screen" id="catScreen">
     <img class="bgimg" id="iBgCat" alt="">
     <button id="catBack" class="lg-back-btn" onclick="goMenu()" aria-label="Menú">Menú</button>
-    <div class="pf-title">¿QUÉ TEMA?</div>
+    <div class="pf-title" id="catTitle">¿QUÉ TEMA?</div>
     <div class="pf-card" id="catCard">
       <div class="pf-row pf-row-big" id="catBtns"></div>
     </div>
@@ -1047,7 +1051,7 @@ function renderCats(){ /* la portada ya no tiene selector: JUGAR mezcla todas la
 
 function startNormal(){
   if(!auth){ askName(startNormal); return; }
-  var row = document.getElementById('catBtns'); row.innerHTML = '';
+  var row = document.getElementById('catBtns'); row.innerHTML = ''; row.classList.remove('two'); document.getElementById('catTitle').textContent = '¿QUÉ TEMA?';
   var opts = [[0,'TODAS']]; Object.keys(CATS).forEach(function(k){ k=parseInt(k); if(catPool(k).length >= 10) opts.push([k, CATS[k]]); });
   opts.forEach(function(o){
     var b = document.createElement('button'); b.className = 'cat-btn' + (o[0]===selCat ? ' sel' : ''); b.textContent = o[1];
@@ -1067,7 +1071,7 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  if(mode==='prep'){ rQ = shuffle(PREP.preguntas.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]|GBP|\d+[.,]\d+|¿cuánto|¿cuál es el precio|ganancia|pérdida/i.test(q.q) ? 240 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 240 s   // prep: 30 del banco privado, con explicación
+  if(mode==='prep'){ var pool = PREP.preguntas.filter(function(q){ return !selPrepArea || prepArea(q) === selPrepArea; }); if(!pool.length) pool = PREP.preguntas; rQ = shuffle(pool.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]|GBP|\d+[.,]\d+|¿cuánto|¿cuál es el precio|ganancia|pérdida/i.test(q.q) ? 240 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 240 s   // prep: 30 del banco privado, con explicación
   else if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
   else { rQ = withGen(buildRun(catPool(selCat)), selCat); }   // normal/torneo: 25 preguntas del tema elegido (0 = todas), una de cálculo por nivel si hay Portafolios
   renderLives(); renderHi();
@@ -1190,7 +1194,7 @@ function recordStat(q, ok){
 function levelOf(i){ var l=Math.floor(i/ARC.perLevel)+1; return mode==='infinito' ? l : Math.min(ARC.times.length, l); }
 function showLevel(cb){
   var cat = torMode ? (CATS[selCat] || 'TORNEO') : (mode==='infinito' ? 'INFINITO' : (CATS[selCat] || ''));
-  if(mode==='prep') cat = PREP ? PREP.titulo : 'PREP';
+  if(mode==='prep') cat = selPrepArea ? selPrepArea.toUpperCase() : (PREP ? PREP.titulo : 'PREP');
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundCat').style.display = cat ? '' : 'none';
@@ -1291,7 +1295,7 @@ function timeUp(){
   if(answered) return;
   answered = true;
   recordStat(rQ[cur], false);
-  trackProg(rQ[cur].cat, false);
+  trackProg(rQ[cur].cat, false); trackPrep(rQ[cur], false);
   missed.push({ q: rQ[cur], chosen: null });
   sfxPlay('fallo');
   document.querySelectorAll('.ans').forEach(function(b){
@@ -1313,7 +1317,7 @@ function pick(idx, ci){
   clearInterval(tInt);
   document.querySelectorAll('.ans').forEach(function(b){ b.disabled=true; });
   recordStat(rQ[cur], idx === ci);
-  trackProg(rQ[cur].cat, idx === ci);
+  trackProg(rQ[cur].cat, idx === ci); trackPrep(rQ[cur], idx === ci);
   sfxPlay(idx === ci ? 'acierto' : 'fallo');
   if(idx === ci){
     document.getElementById('a'+idx).classList.add('correct');
@@ -1652,6 +1656,43 @@ function pushOne(node, val, key){
 // ===== TORNEO DE LA SEMANA =====
 function isProf(){ return !!(auth && PROF_UID && PROF_UID.indexOf('__')!==0 && auth.uid === PROF_UID); }
 // ----- PREP: banco privado del profe en Firebase /prep (solo lo lee su cuenta); no entra al scoreboard -----
+var PREP_RULES = [['Ética', /ethic|standards? of professional|guidance for standards|gips|code of ethics|professionalism|ética|misconduct|cfa institute|, cfa\b|\bthe standard\b|standard [ivx]+\(|soft dollar|material nonpublic|supervisor/i], ['Finanzas corporativas', /corporate|capital structure|cost of capital|capital budgeting|capital investments|capital allocation(?! line)|working capital|business models|organizational forms|stakeholders|measures of leverage|dividend policy|share repurchase|wacc|npv|\birr\b|payback|sources of capital|minority shareholders|acquisition|\besg\b|stranded asset|finanzas corporativas/i], ['Métodos cuantitativos', /quant|rates and returns|time value|statistical|probabilit|portfolio mathematics|simulation|estimation and inference|hypothesis|parametric|regression|big data|sampling|estadística|rendimientos|valor del dinero|distribution|correlation|standard deviation|confidence interval|p-value|t-test|chi-square|annuity|present value|future value|compound|geometric mean|harmonic|money-weighted|time-weighted|percentile|quartile|quintile|skew|kurtosis|variance|bayes|describing data|visualiz|retire|deposit/i], ['Economía', /market structures|aggregate output|business cycle|monetary|fiscal|geopolitic|international trade|currency|exchange rate|foreign exchange|capital flows|tipos de cambio|econom|\bgdp\b|inflation|elasticit|demand|supply|oligopol|monopol|central bank|macro/i], ['Estados financieros', /financial statement|financial reporting|income statement|balance sheet|cash flow|inventor|long-lived|long-term assets|income taxes|long-term liabilities|financial analysis techniques|analyzing|modeling|ifrs|gaap|depreciation|deferred tax|lease|\beps\b|earnings per share|receivable|payable|goodwill|impairment|revenue recognition/i], ['Renta variable', /equity|market organization|security market index|market efficiency|industry and company|company analysis|stock|dividend discount|gordon|p\/e|price-to|margin call|short sale|index/i], ['Renta fija', /fixed|bond|credit analysis|asset-backed|yield|duration|coupon|spread|mortgage|securitiz|treasury|ytm|convexity|renta fija/i], ['Derivados', /derivative|derivados|option|forward|futures|swap|\bput\b|\bcall\b|hedge ratio|binomial|put-call|strike|arbitrage/i], ['Alternativos', /alternative|hedge fund|private equity|real estate|commodit|infrastructure|\breit|alternativos/i], ['Portafolios', /portfolio|risk management|behavioral|fintech|asset allocation|investment policy|capm|capital allocation line|sharpe|\bbeta\b|systematic|diversif|efficient frontier|\bcal\b|\bsml\b|portafolios/i]];
+var PREP_AREAS = ['Ética', 'Métodos cuantitativos', 'Economía', 'Estados financieros', 'Finanzas corporativas', 'Renta variable', 'Renta fija', 'Derivados', 'Alternativos', 'Portafolios', 'Otros'];
+var selPrepArea = '';                 // '' = todas
+function prepArea(q){                 // módulo del Level I: viene en q.area o se deduce del reading / enunciado
+  if(q.area) return q.area;
+  var t = q.topic || '', i;
+  for(i = 0; i < PREP_RULES.length; i++) if(PREP_RULES[i][1].test(t)) return PREP_RULES[i][0];
+  var body = ((q.q || '') + ' ' + (q.opts || []).join(' ')).slice(0, 600);
+  for(i = 0; i < PREP_RULES.length; i++) if(PREP_RULES[i][1].test(body)) return PREP_RULES[i][0];
+  return 'Otros';
+}
+function prepStatKey(){ return 'ml_prep_' + (auth ? auth.uid : 'anon'); }
+function loadPrepStat(){ try{ return JSON.parse(localStorage.getItem(prepStatKey()) || '{}'); }catch(e){ return {}; } }
+function trackPrep(q, ok){
+  if(mode !== 'prep' || !q) return;
+  var st = loadPrepStat(), a = prepArea(q), e = st[a] || {n:0, ok:0}; e.n++; if(ok) e.ok++; st[a] = e;
+  try{ localStorage.setItem(prepStatKey(), JSON.stringify(st)); }catch(x){}
+}
+function showPrepAreas(){             // ¿QUÉ MÓDULO? : TODAS + cada área con cuántas hay y tu % de acierto
+  var row = document.getElementById('catBtns'); row.innerHTML = ''; row.classList.add('two');
+  document.getElementById('catTitle').textContent = '¿QUÉ MÓDULO?';
+  var cnt = {}; PREP.preguntas.forEach(function(q){ var a = prepArea(q); cnt[a] = (cnt[a] || 0) + 1; });
+  var st = loadPrepStat();
+  var opts = [['', 'TODAS', PREP.preguntas.length]];
+  PREP_AREAS.forEach(function(a){ if(cnt[a]) opts.push([a, a.toUpperCase(), cnt[a]]); });
+  opts.forEach(function(o){
+    var b = document.createElement('button'); b.className = 'cat-btn' + (o[0] === selPrepArea ? ' sel' : '');
+    var e = o[0] ? st[o[0]] : null, tot = {n:0, ok:0};
+    if(!o[0]) Object.keys(st).forEach(function(k){ tot.n += st[k].n; tot.ok += st[k].ok; });
+    if(!o[0]) e = tot.n ? tot : null;
+    b.innerHTML = o[1] + '<small class="cat-sub">' + o[2] + ' preg.' + (e && e.n >= 3 ? ' · ' + Math.round(100 * e.ok / e.n) + '%' : '') + '</small>';
+    b.style.backgroundImage = "url(" + ASSETS.btn_cat + ")";
+    b.onclick = function(){ selPrepArea = o[0]; goMenu(); mode = 'prep'; torMode = false; startGame(); };
+    row.appendChild(b);
+  });
+  show('catScreen');
+}
 var PREP = null, expRight = false;
 var missed = [];                      // preguntas falladas en la partida (para el repaso)
 // ----- progreso por tema del alumno (en el teléfono, por cuenta) -----
@@ -1912,8 +1953,7 @@ function prepUpload(file){          // el profe elige el .json {titulo, pregunta
 function startPrep(){
   if(!isProf()) return;
   if(!PREP){ loadPrep(function(err){ if(err) alert(err); else startPrep(); }); return; }
-  goMenu(); mode = 'prep'; torMode = false;
-  startGame();
+  showPrepAreas();
 }
 function showExp(right){
   expRight = right; var q = rQ[cur];
