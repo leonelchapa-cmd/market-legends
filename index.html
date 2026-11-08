@@ -1666,6 +1666,10 @@ function loadPrep(cb){
         var all = []; Object.keys(j).filter(function(k){ return /^preguntas\d*$/.test(k); }).sort(function(a,b){ return (parseInt(a.slice(9))||1) - (parseInt(b.slice(9))||1); })
           .forEach(function(k){ var arr = j[k]; if(arr && typeof arr === 'object' && !Array.isArray(arr)) arr = Object.keys(arr).sort(function(a,b){ return a-b; }).map(function(i){ return arr[i]; }); if(Array.isArray(arr)) all = all.concat(arr.filter(Boolean)); });
         if(all.length) j.preguntas = all;
+        if(j.preguntas) j.preguntas = j.preguntas.filter(function(q){        // descarta preguntas mal armadas por el OCR
+          if(!q || !q.q || !q.opts || q.opts.length < 3) return false;
+          return !q.opts.some(function(o){ return !o || o.length > 320 || /uestion\s*\d/.test(o); }) && !/uestion\s*\d/.test(q.q);
+        });
       }
       if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); if(cb) cb(null); }
       else { renderPrepBtn(); if(cb) cb('No hay banco en Firebase (/prep vacío).'); } })
