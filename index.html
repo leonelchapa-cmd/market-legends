@@ -487,6 +487,20 @@ body.prep .ans .txt{font-size:14px;}
 .rv-cat{font-weight:700;font-size:11px;color:#8E24AA;letter-spacing:1px;text-transform:uppercase;}
 .rv-empty{font-weight:700;font-size:15px;text-align:center;padding:30px 10px;color:#3E2723;}
 #reviewScreen .lb-card{max-height:74%;}
+
+/* ---- formulario ---- */
+.frm-link{position:relative;z-index:10;display:block;margin:8px auto 0;padding:4px 16px;border:none;background:rgba(255,255,255,.18);border-radius:14px;cursor:pointer;
+  font-family:'Katahdin','Fredoka One',cursive;font-size:15px;letter-spacing:2px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.35);}
+.frm-link:active{transform:translateY(2px);}
+#formScreen .lb-card{max-height:76%;}
+.fm-search{display:block;width:92%;margin:4px auto 8px;padding:8px 12px;border:2px solid #E1BEE7;border-radius:12px;font-family:'RalewayG','Nunito',sans-serif;font-size:14px;font-weight:700;color:#3E2723;outline:none;}
+.fm-sec{padding:8px 4px 2px;font-family:'Katahdin','Fredoka One',cursive;font-size:15px;letter-spacing:1.5px;color:#8E24AA;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.08);}
+.fm-sec small{font-family:'RalewayG','Nunito',sans-serif;letter-spacing:0;font-size:11px;color:#9E9E9E;margin-left:6px;}
+.fm-item{padding:7px 4px 8px;border-bottom:1px solid rgba(0,0,0,.06);}
+.fm-name{font-weight:700;font-size:13px;color:#3E2723;line-height:1.3;}
+.fm-eq{font-family:Consolas,Menlo,monospace;font-size:13px;color:#1B5E20;background:#F1F8E9;border-radius:6px;padding:4px 8px;margin-top:4px;white-space:pre-line;line-height:1.4;}
+.fm-note{font-size:11.5px;color:#5D4037;margin-top:3px;line-height:1.3;}
+@media (min-width:700px) and (pointer:fine){ .phone .fm-eq{font-size:14px;} .phone .fm-name{font-size:14px;} }
 </style>
 </head>
 <body>
@@ -514,6 +528,7 @@ body.prep .ans .txt{font-size:14px;}
     <button class="tor-btn on inf-btn" id="infBtn" onclick="startInfinito()">INFINITO</button>
     <button class="tor-btn" id="torBtn" onclick="startTorneo()">TORNEO<small id="torSub"></small></button>
     <button class="tor-btn on sb-btn" id="sbBtn" onclick="showLeaderboard()">SCOREBOARD</button>
+    <button class="frm-link" onclick="showFormulas()">FÓRMULAS</button>
     <div class="menu-hi" id="menuHi"></div>
   </div>
 
@@ -642,6 +657,17 @@ body.prep .ans .txt{font-size:14px;}
     <div class="lb-head"><img id="iRvHead" alt=""><div class="lb-title">REPASO</div></div>
     <div class="lb-card" id="rvCard">
       <div class="lb-list rv-list" id="rvList"></div>
+    </div>
+  </div>
+
+  <!-- FORMULARIO -->
+  <div class="screen" id="formScreen">
+    <img class="bgimg" id="iBgForm" alt="">
+    <button class="lb-back" id="frmBack" onclick="goMenu()" aria-label="Menú">🏠</button>
+    <div class="lb-head"><img id="iFrmHead" alt=""><div class="lb-title">FÓRMULAS</div></div>
+    <div class="lb-card" id="frmCard">
+      <input class="fm-search" id="fmSearch" type="search" placeholder="Buscar (beta, duración, WACC...)" oninput="renderFormulas()">
+      <div class="lb-list rv-list" id="frmList"></div>
     </div>
   </div>
 
@@ -886,7 +912,7 @@ window.onload = function() {
   document.getElementById('rbHome').style.backgroundImage = "url("+ASSETS.sp_home+")";
   document.getElementById('rbLb').style.backgroundImage = "url("+ASSETS.sp_lb+")";
   document.getElementById('rbPlay').style.backgroundImage = "url("+ASSETS.sp_play+")";
-  document.querySelector('.lb-back').style.backgroundImage = "url("+ASSETS.sp_home+")"; document.getElementById('rvBack').style.backgroundImage = "url("+ASSETS.sp_home+")";
+  document.querySelector('.lb-back').style.backgroundImage = "url("+ASSETS.sp_home+")"; document.getElementById('rvBack').style.backgroundImage = "url("+ASSETS.sp_home+")"; document.getElementById('frmBack').style.backgroundImage = "url("+ASSETS.sp_home+")"; document.getElementById('iBgForm').src = ASSETS.bg_purple; document.getElementById('iFrmHead').src = ASSETS.sp_lb1;
   document.getElementById('iStar').src = ASSETS.sp_starburst;
   document.getElementById('iLbHead').src = ASSETS.sp_lb1;
   document.getElementById('iRvHead').src = ASSETS.sp_lb1;
@@ -1641,6 +1667,154 @@ function needMore(){               // el tema con peor acierto (mínimo 5 contes
   return worst;
 }
 // ----- repaso de las falladas al final de la partida -----
+
+// ---------- FORMULARIO (Level I, en español) ----------
+var FORMULAS = [
+ {t:'Valor del dinero en el tiempo', items:[
+  ['Valor futuro de una suma','VF = VP × (1 + r)ⁿ','r = tasa por periodo, n = número de periodos.'],
+  ['Valor presente de una suma','VP = VF / (1 + r)ⁿ',''],
+  ['Capitalización m veces al año','VF = VP × (1 + r/m)^(m·n)','Trimestral: m = 4; mensual: m = 12. Continua: VF = VP × e^(r·n).'],
+  ['Tasa efectiva anual (EAR)','EAR = (1 + r/m)^m − 1','Compara tasas con distinta frecuencia de capitalización.'],
+  ['VP de una anualidad ordinaria','VP = A × [1 − (1 + r)^−n] / r','Pagos al final de cada periodo. Anualidad anticipada: multiplica por (1 + r).'],
+  ['VF de una anualidad ordinaria','VF = A × [(1 + r)ⁿ − 1] / r',''],
+  ['Perpetuidad','VP = A / r','Perpetuidad creciente: VP = A₁ / (r − g).'],
+  ['Rendimiento del periodo de tenencia','HPR = (P₁ − P₀ + ingresos) / P₀',''],
+  ['Media geométrica (rendimiento compuesto)','R_G = [(1+R₁)(1+R₂)…(1+Rₙ)]^(1/n) − 1',''],
+  ['Rendimiento ponderado por dinero','TIR de los flujos de la cuenta (depósitos −, retiros +)','En la calculadora: CF0, CFj, IRR.'],
+ ]},
+ {t:'Estadística y probabilidad', items:[
+  ['Media aritmética','X̄ = ΣXᵢ / n',''],
+  ['Varianza muestral','s² = Σ(Xᵢ − X̄)² / (n − 1)','Poblacional: divide entre n. Desviación estándar = √varianza.'],
+  ['Coeficiente de variación','CV = s / X̄','Riesgo por unidad de rendimiento; menor es mejor.'],
+  ['Posición de un percentil','L_y = (n + 1) × y / 100','Luego interpola entre las observaciones vecinas.'],
+  ['Covarianza y correlación','Cov(X,Y) = Σ(Xᵢ − X̄)(Yᵢ − Ȳ) / (n − 1)\nρ = Cov(X,Y) / (σ_X × σ_Y)','ρ va de −1 a +1.'],
+  ['Probabilidad condicional','P(A | B) = P(AB) / P(B)',''],
+  ['Regla de la multiplicación','P(AB) = P(A | B) × P(B)','Independientes: P(AB) = P(A) × P(B).'],
+  ['Regla de la suma','P(A o B) = P(A) + P(B) − P(AB)',''],
+  ['Probabilidad total','P(A) = P(A|S₁)P(S₁) + P(A|S₂)P(S₂) + …','Escenarios S mutuamente excluyentes y exhaustivos.'],
+  ['Teorema de Bayes','P(S | A) = P(A | S) × P(S) / P(A)',''],
+  ['Valor esperado y varianza de una variable','E(X) = Σ pᵢ Xᵢ\nσ² = Σ pᵢ [Xᵢ − E(X)]²',''],
+  ['Binomial (n ensayos, prob. p)','P(x) = C(n,x) × pˣ × (1−p)^(n−x)\nE(X) = n·p,  σ² = n·p·(1−p)',''],
+  ['Intervalo de confianza','X̄ ± z × σ/√n   (σ conocida)\nX̄ ± t × s/√n   (σ desconocida)','z = 1.65 (90%), 1.96 (95%), 2.58 (99%).'],
+  ['Estadístico t para la media','t = (X̄ − μ₀) / (s/√n)','gl = n − 1.'],
+  ['Error estándar de la media','σ_X̄ = σ / √n',''],
+  ['Regresión lineal simple','Y = b₀ + b₁X + ε\nb₁ = Cov(X,Y) / Var(X),  b₀ = Ȳ − b₁X̄','R² = (correlación)² en regresión simple.'],
+  ['Normal: intervalos','68% en ±1σ, 95% en ±2σ, 99% en ±3σ',''],
+  ['Roy: razón de seguridad primero','SFRatio = [E(R_P) − R_L] / σ_P','Mayor es mejor; R_L = nivel mínimo aceptable.'],
+ ]},
+ {t:'Economía', items:[
+  ['Elasticidad precio de la demanda','E = (%Δ cantidad) / (%Δ precio)','|E| > 1 elástica; < 1 inelástica.'],
+  ['Efecto Fisher','(1 + nominal) = (1 + real) × (1 + inflación)\naprox.: nominal ≈ real + inflación',''],
+  ['Multiplicador del dinero','m = 1 / coeficiente de reserva',''],
+  ['Ecuación cuantitativa','M × V = P × Y',''],
+  ['PIB por el gasto','PIB = C + I + G + (X − M)',''],
+  ['Tipo de cambio cruzado','A/C = (A/B) × (B/C)','Cotización A/B = unidades de A por una unidad de B.'],
+  ['Forward y paridad de tasas','F = S × (1 + r_precio) / (1 + r_base)','Primo/descuento forward = F − S.'],
+  ['Tipo de cambio real','Real = Nominal × (P_extranjero / P_doméstico)','En términos de la cotización A/B, con índices de precios.'],
+ ]},
+ {t:'Estados financieros', items:[
+  ['Ecuación contable','Activos = Pasivos + Capital',''],
+  ['Margen bruto, operativo y neto','Margen = Utilidad (bruta / operativa / neta) / Ventas',''],
+  ['ROE y ROA','ROE = Utilidad neta / Capital promedio\nROA = Utilidad neta / Activos promedio',''],
+  ['DuPont (3 factores)','ROE = Margen neto × Rotación de activos × Apalancamiento\n= (UN/Ventas) × (Ventas/Activos) × (Activos/Capital)',''],
+  ['Razón circulante y prueba ácida','Circulante = AC / PC\nÁcida = (Efectivo + Inversiones + CxC) / PC',''],
+  ['Rotaciones y días','Rotación de inventario = Costo de ventas / Inv. promedio\nDías de inventario = 365 / rotación\nDías de cobro = 365 / (Ventas / CxC prom.)\nDías de pago = 365 / (Compras / CxP prom.)',''],
+  ['Ciclo de conversión de efectivo','CCE = Días inventario + Días cobro − Días pago',''],
+  ['Cobertura de intereses','EBIT / Gasto por intereses',''],
+  ['Deuda a capital y a activos','D/E = Deuda / Capital\nPeso de la deuda = D / (D + E) = (D/E) / (1 + D/E)',''],
+  ['UPA básica y diluida','UPA = (UN − Div. preferentes) / Acciones promedio\nDiluida: ajusta numerador y denominador por convertibles y opciones (método de acciones de tesorería)',''],
+  ['Flujo de efectivo libre','FCFF = CFO + Int × (1 − t) − CapEx\nFCFE = CFO − CapEx + Deuda neta emitida',''],
+  ['Depreciación en línea recta','(Costo − Valor residual) / Vida útil',''],
+ ]},
+ {t:'Finanzas corporativas', items:[
+  ['VPN y TIR','VPN = Σ FCₜ / (1 + r)ᵗ − Inversión\nTIR: tasa que hace VPN = 0','Acepta si VPN > 0 (o TIR > costo de capital).'],
+  ['Costo promedio ponderado de capital','WACC = w_d × r_d × (1 − t) + w_p × r_p + w_e × r_e',''],
+  ['Costo del capital (CAPM)','r_e = r_f + β × (R_m − r_f)',''],
+  ['Costo del capital (dividendos)','r_e = D₁ / P₀ + g',''],
+  ['Costo de la preferente','r_p = Dividendo preferente / Precio',''],
+  ['Grado de apalancamiento operativo','DOL = Q(P − V) / [Q(P − V) − F]','% cambio en utilidad operativa por % cambio en ventas.'],
+  ['Grado de apalancamiento financiero','DFL = EBIT / (EBIT − Intereses)',''],
+  ['Grado de apalancamiento total','DTL = DOL × DFL',''],
+  ['Punto de equilibrio','Q_BE = (Costos fijos operativos + Costos fijos financieros) / (P − V)\nQ_OBE (operativo) = Costos fijos operativos / (P − V)',''],
+  ['Periodo de recuperación','Años hasta que los flujos acumulados igualan la inversión',''],
+ ]},
+ {t:'Renta variable', items:[
+  ['Modelo de Gordon','P₀ = D₁ / (r − g) = D₀ × (1 + g) / (r − g)','Requiere r > g.'],
+  ['Crecimiento sostenible','g = b × ROE','b = tasa de retención = 1 − payout.'],
+  ['DDM de dos etapas','P₀ = Σ Dₜ/(1+r)ᵗ + [D_{n+1}/(r − g)] / (1+r)ⁿ',''],
+  ['P/U justificado','P₀/E₁ = payout / (r − g)',''],
+  ['Múltiplos','P/U = Precio / UPA;  P/VL = Precio / Valor en libros por acción;  P/Ventas;  EV/EBITDA\nEV = Cap. de mercado + Deuda + Preferentes − Efectivo',''],
+  ['Preferente perpetua','P = Dividendo / r',''],
+  ['Rendimiento de un índice','Índice ponderado por precio: suma de precios / divisor\nEqual-weighted: promedio simple de los rendimientos\nPor capitalización: Σ(P × Q) / divisor',''],
+  ['Compra con margen','Apalancamiento = 1 / margen inicial\nPrecio de llamada de margen = P₀ × (1 − margen inicial) / (1 − margen de mantenimiento)',''],
+ ]},
+ {t:'Renta fija', items:[
+  ['Precio de un bono','P = Σ Cupón/(1+y)ᵗ + Nominal/(1+y)ⁿ','En la calculadora: N, I/Y, PMT, FV → PV.'],
+  ['Rendimiento corriente','Cupón anual / Precio',''],
+  ['Duración modificada','Dur. mod. = Dur. Macaulay / (1 + y/m)',''],
+  ['Duración aproximada','Dur. aprox. = (P₋ − P₊) / (2 × P₀ × Δy)',''],
+  ['Cambio de precio con duración y convexidad','%ΔP ≈ −Dur.mod × Δy + ½ × Convexidad × (Δy)²',''],
+  ['Duración en dinero y PVBP','Dur. en dinero = Dur. mod × Precio total\nPVBP = Dur. en dinero × 0.0001',''],
+  ['Tasa spot y forward','(1 + s₂)² = (1 + s₁)(1 + f₁,₁)','f₁,₁ = forward de un año dentro de un año.'],
+  ['Precio con tasas forward','P = Σ FCₜ / [(1+f₀)(1+f₁)…(1+f_{t−1})]',''],
+  ['Valor presente de los puntos base','Spread: diferencia de rendimiento vs. bono de referencia',''],
+  ['Rendimiento de instrumentos de mercado de dinero','Tasa de descuento: (Nominal − P)/Nominal × 360/días\nTasa add-on: (Nominal − P)/P × 365/días',''],
+ ]},
+ {t:'Derivados', items:[
+  ['Pago de una call al vencer','c_T = máx(0, S_T − X)','Ganancia = pago − prima. Equilibrio: X + prima.'],
+  ['Pago de una put al vencer','p_T = máx(0, X − S_T)','Ganancia = pago − prima. Equilibrio: X − prima.'],
+  ['Paridad put-call','c + X/(1+r)ᵀ = p + S','Acción + put = call + bono cupón cero (fiduciary call).'],
+  ['Precio forward sin arbitraje','F₀ = S₀ × (1 + r)ᵀ','Con costo de acarreo: F₀ = (S₀ + VP costos − VP beneficios) × (1+r)ᵀ.'],
+  ['Valor de un forward antes de vencer','V_t = S_t − F₀ / (1 + r)^(T−t)','Para la parte larga.'],
+  ['Binomial: razón de cobertura','h = (c_u − c_d) / (S_u − S_d)','Acciones por call vendida para que la cartera valga lo mismo en ambos escenarios.'],
+  ['Binomial: probabilidad neutral al riesgo','π = (1 + r − R_d) / (R_u − R_d)','R_u = S_u/S₀, R_d = S_d/S₀.'],
+  ['Binomial: precio de la opción','c₀ = [π × c_u + (1 − π) × c_d] / (1 + r)','Mismo resultado que cubrir con h acciones y descontar.'],
+  ['Cotas de una call europea','máx(0, S − X/(1+r)ᵀ) ≤ c ≤ S',''],
+  ['Cotas de una put europea','máx(0, X/(1+r)ᵀ − S) ≤ p ≤ X/(1+r)ᵀ',''],
+  ['Factores de la prima','Spot ↑: call ↑, put ↓.  Ejercicio ↑: call ↓, put ↑.\nPlazo ↑: ambas ↑.  Volatilidad ↑: ambas ↑.  Tasa ↑: call ↑, put ↓.',''],
+ ]},
+ {t:'Inversiones alternativas', items:[
+  ['Comisiones de un hedge fund','Gestión = AUM × %gestión\nIncentivo = (Ganancia − umbral) × %incentivo\nSi es neta de gestión: ganancia después de la comisión de gestión','Hurdle duro: solo sobre el exceso; suave: sobre toda la ganancia si se supera.'],
+  ['Marca de agua (high-water mark)','Incentivo solo sobre ganancias por encima del máximo valor anterior',''],
+  ['Rendimiento neto del inversionista','R_neto = (Valor final − comisiones) / Valor inicial − 1',''],
+ ]},
+ {t:'Portafolios', items:[
+  ['Rendimiento esperado del portafolio','E(R_P) = Σ wᵢ E(Rᵢ)',''],
+  ['Varianza de dos activos','σ_P² = w₁²σ₁² + w₂²σ₂² + 2w₁w₂ρσ₁σ₂','Con ρ = 1 no hay diversificación; con ρ = −1 puede llegar a cero.'],
+  ['Beta','β = Cov(Rᵢ, R_m) / σ_m² = ρ × σᵢ / σ_m',''],
+  ['CAPM (línea del mercado de valores)','E(Rᵢ) = r_f + βᵢ × [E(R_m) − r_f]','Prima de riesgo de mercado = E(R_m) − r_f.'],
+  ['Línea de asignación de capital','E(R_P) = r_f + [E(R_m) − r_f] / σ_m × σ_P','Pendiente = razón de Sharpe del portafolio de mercado.'],
+  ['Razón de Sharpe','(R_P − r_f) / σ_P','Riesgo total.'],
+  ['Razón de Treynor','(R_P − r_f) / β_P','Riesgo sistemático.'],
+  ['Alfa de Jensen','α = R_P − [r_f + β_P × (R_m − r_f)]',''],
+  ['M² (Modigliani)','M² = (R_P − r_f) × σ_m / σ_P − (R_m − r_f)',''],
+  ['Beta del portafolio','β_P = Σ wᵢ βᵢ',''],
+  ['Utilidad del inversionista','U = E(R) − ½ × A × σ²','A = aversión al riesgo.'],
+ ]},
+];
+function renderFormulas(){
+  var L = document.getElementById('frmList'); if(!L) return;
+  var q = (document.getElementById('fmSearch').value || '').toLowerCase().trim();
+  L.innerHTML = '';
+  FORMULAS.forEach(function(sec, si){
+    var items = sec.items.filter(function(it){ return !q || (it[0] + ' ' + it[1] + ' ' + (it[2]||'') + ' ' + sec.t).toLowerCase().indexOf(q) >= 0; });
+    if(!items.length) return;
+    var open = q ? true : !!window.__fmOpen && window.__fmOpen[si];
+    var h = document.createElement('div'); h.className = 'fm-sec'; h.innerHTML = (open ? '▾ ' : '▸ ') + sec.t + '<small>' + items.length + '</small>';
+    h.onclick = function(){ window.__fmOpen = window.__fmOpen || {}; window.__fmOpen[si] = !window.__fmOpen[si]; renderFormulas(); };
+    L.appendChild(h);
+    if(!open) return;
+    items.forEach(function(it){
+      var d = document.createElement('div'); d.className = 'fm-item';
+      d.innerHTML = '<div class="fm-name"></div><div class="fm-eq"></div>' + (it[2] ? '<div class="fm-note"></div>' : '');
+      d.querySelector('.fm-name').textContent = it[0]; d.querySelector('.fm-eq').textContent = it[1];
+      if(it[2]) d.querySelector('.fm-note').textContent = it[2];
+      L.appendChild(d);
+    });
+  });
+}
+function showFormulas(){ document.getElementById('fmSearch').value = ''; renderFormulas(); show('formScreen'); var c = document.getElementById('frmCard'); if(c) c.scrollTop = 0; }
+
 function showReview(){
   var L = document.getElementById('rvList'); L.innerHTML = '';
   if(!missed.length){ L.innerHTML = '<div class="rv-empty">¡No fallaste ninguna!</div>'; show('reviewScreen'); return; }
@@ -1674,7 +1848,8 @@ function loadPrep(cb){
           return t.trim();
         };
         var rows = function(t){                                                // tablas que el PDF aplanó en una línea: corta antes de cada etiqueta
-          if(typeof t !== 'string' || t.indexOf(String.fromCharCode(10)) >= 0) return t;
+          if(typeof t !== 'string') return t;
+          if(t.indexOf(String.fromCharCode(10)) >= 0) return t.split(String.fromCharCode(10)).map(rows).join(String.fromCharCode(10));
           var nums = t.match(/-?\d[\d.,]*%?/g) || [];
           if(nums.length < 3) return t;
           return t.replace(/(\d[\d.,]*%?\)?(?:\s+(?:million|billion|thousand|units|years|days|months|shares|percent|bps))?)\s+(?=[A-Z][A-Za-z'()\/-]*(?:\s+[A-Za-z'()\/:-]+){0,8}\s*:?\s*-?[\d$€£])/g, '$1' + String.fromCharCode(10));
