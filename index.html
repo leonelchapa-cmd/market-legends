@@ -1668,16 +1668,16 @@ function loadPrep(cb){
         if(all.length) j.preguntas = all;
         var tidy = function(t){                                                // limpieza cosmética de textos que vienen del OCR / PDF
           if(typeof t !== 'string') return t;
-          t = t.replace(/E(?=[0-9l]\.\d)/g, '€').replace(/€l\./g, '€1.').replace(/\$l\./g, '$1.');
-          t = t.replace(/[ABC] is (correct|incorrect)(\s+because)?\s*[\.:,]?\s*/g, '');
-          t = t.replace(/(\d)\s*0\/0/g, '$1%').replace(/[ 	]{2,}/g, ' ').replace(/\s+([,\.;:])/g, '$1');
+          t = t.replace(/\bE(?=[0-9l]\.\d)/g, '€').replace(/€l\./g, '€1.').replace(/\$l\./g, '$1.');
+          t = t.replace(/\b[ABC] is (correct|incorrect)\b(\s+because)?\s*[\.:,]?\s*/g, '');
+          t = t.replace(/(\d)\s*0\/0/g, '$1%').replace(/[ \t]{2,}/g, ' ').replace(/\s+([,\.;:])/g, '$1');
           return t.trim();
         };
         if(j.preguntas) j.preguntas.forEach(function(q){ if(!q) return; q.q = tidy(q.q); q.e = tidy(q.e); if(q.opts) q.opts = q.opts.map(tidy); });
         if(j.preguntas) j.preguntas = j.preguntas.filter(function(q){        // descarta preguntas mal armadas por el OCR
           if(!q || !q.q || !q.opts || q.opts.length < 3) return false;
           if(/^PP\d/.test(q.src || '') && q.q.indexOf(' | ') >= 0) return false;   // tablas de los packs escaneados: el OCR las revuelve
-          return !q.opts.some(function(o){ return !o || o.length > 320 || /uestion\s*\d/.test(o); }) && !/uestion\s*\d/.test(q.q);
+          return !q.opts.some(function(o){ return !o || o.length > 320 || /\buestion\s*\d/.test(o); }) && !/\buestion\s*\d/.test(q.q);
         });
       }
       if(j && j.preguntas && j.preguntas.length){ PREP = j; renderPrepBtn(); if(cb) cb(null); }
