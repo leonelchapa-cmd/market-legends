@@ -749,7 +749,7 @@ body.prep .ans .txt{font-size:14px;}
 
   <div class="ct-overlay" id="quitOverlay">
     <div class="ct-card" id="quitCard">
-      <div class="ct-title">¿SALIR?</div>
+      <div class="ct-title" id="quitTitle">¿SALIR?</div>
       <div class="ct-sub" id="quitSub">Se pierde la partida en curso.</div>
       <button class="ct-btn" id="quitYes" onclick="quitYes()">SALIR</button>
       <div class="ct-no" onclick="quitNo()">Seguir jugando</div>
@@ -1366,7 +1366,10 @@ function loseLife(){
 var quitPaused = 0;
 function askQuit(){
   if(!document.getElementById('gameScreen').classList.contains('active')) return;
-  document.getElementById('quitSub').textContent = torMode ? 'Es tu intento del torneo: se registra el puntaje que llevas.' : 'Se pierde la partida en curso.';
+  var prep = (mode === 'prep');
+  document.getElementById('quitTitle').textContent = prep ? '¿TERMINAR?' : '¿SALIR?';
+  document.getElementById('quitYes').textContent = prep ? 'TERMINAR' : 'SALIR';
+  document.getElementById('quitSub').textContent = prep ? ('Terminas aquí: ' + cur + ' contestadas, ' + hits + ' bien. Pasas al resumen y al repaso de las que fallaste.') : (torMode ? 'Es tu intento del torneo: se registra el puntaje que llevas.' : 'Se pierde la partida en curso.');
   quitPaused = tEnd - Date.now(); clearInterval(tInt);   // el reloj se detiene mientras decide
   document.getElementById('quitOverlay').classList.add('active');
 }
@@ -1379,7 +1382,7 @@ function quitNo(){
 function quitYes(){
   document.getElementById('quitOverlay').classList.remove('active');
   clearInterval(tInt); answered = true;
-  if(torMode){ showResult(false); } else { goMenu(); }
+  if(torMode || mode === 'prep'){ if(mode === 'prep'){ var ov = document.getElementById('expOverlay'); if(ov) ov.classList.remove('active'); } showResult(false); } else { goMenu(); }
 }
 document.addEventListener('keydown', function(ev){ if(ev.key==='Escape'){ if(document.getElementById('quitOverlay').classList.contains('active')) quitNo(); else askQuit(); } });   // en PC, Esc = salir
 // ----- ¿Continuar? (el "insert coin" de las maquinitas, con monedas del juego) -----
@@ -1444,7 +1447,7 @@ function showResult(dominated){
   musicStop(); sfxPlay(dominated ? 'victoria' : 'bono');
   coins += 30;
   var inf = (mode==='infinito'), prep = (mode==='prep');
-  document.getElementById('rsTitle').textContent = dominated ? '¡RONDA COMPLETA!' : 'GAME OVER';
+  document.getElementById('rsTitle').textContent = dominated ? '¡RONDA COMPLETA!' : (prep ? 'SESIÓN TERMINADA' : 'GAME OVER');
   document.getElementById('rsInfo').textContent  = inf ? ('INFINITO · LLEGASTE A LA PREGUNTA ' + cur + ' · ' + hits + ' ACIERTOS') : ('NIVEL ' + level + ' · ' + hits + ' ACIERTOS DE ' + cur);
   var H = curHi();
   var rec = !prep && newRecord && score > 0 && score >= H.score;
