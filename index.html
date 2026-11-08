@@ -1676,6 +1676,7 @@ function loadPrep(cb){
         if(j.preguntas) j.preguntas.forEach(function(q){ if(!q) return; q.q = tidy(q.q); q.e = tidy(q.e); if(q.opts) q.opts = q.opts.map(tidy); });
         if(j.preguntas) j.preguntas = j.preguntas.filter(function(q){        // descarta preguntas mal armadas por el OCR
           if(!q || !q.q || !q.opts || q.opts.length < 3) return false;
+          if(/^PP\d/.test(q.src || '') && q.q.indexOf(' | ') >= 0) return false;   // tablas de los packs escaneados: el OCR las revuelve
           return !q.opts.some(function(o){ return !o || o.length > 320 || /uestion\s*\d/.test(o); }) && !/uestion\s*\d/.test(q.q);
         });
       }
