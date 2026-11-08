@@ -409,6 +409,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .pf-row-big.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .pf-row-big.two .cat-btn{min-height:50px;font-size:11.5px;letter-spacing:.5px;padding:4px 6px;}
 .pf-row-big.two .cat-btn:first-child{grid-column:1 / -1;}
+.life-inf{font-family:'Katahdin','Fredoka One',cursive;font-size:22px;color:#FFD54F;margin-left:4px;text-shadow:0 2px 4px rgba(0,0,0,.3);line-height:1;}
+.exp-ref{font-size:11px;color:#5D4037;margin-top:8px;padding-top:6px;border-top:1px dashed rgba(0,0,0,.18);line-height:1.35;text-align:left;}
+.rv-ref{font-size:10.5px;color:#6D4C41;margin-top:4px;}
 .cat-sub{display:block;font-family:'RalewayG','Nunito',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:0;opacity:.85;margin-top:1px;}
 @media (min-width:700px) and (pointer:fine){ #catScreen{justify-content:center;} }
 .pf-title{font-family:'Katahdin','Fredoka One',cursive;font-size:28px;color:#fff;letter-spacing:3px;margin-top:64px;position:relative;z-index:5;text-shadow:0 3px 10px rgba(0,0,0,.3);}
@@ -757,6 +760,7 @@ body.prep .ans .txt{font-size:14px;}
       <div class="ct-title" id="expTitle">CORRECTO</div>
       <div class="exp-topic" id="expTopic"></div>
       <div class="ct-sub exp-txt" id="expTxt"></div>
+      <div class="exp-ref" id="expRef" style="display:none"></div>
       <button class="ct-btn" id="expBtn" onclick="expGo()">SIGUIENTE</button>
     </div>
   </div>
@@ -1206,6 +1210,7 @@ function showLevel(cb){
 }
 function renderLives(){
   var el = document.getElementById('lives'); el.innerHTML='';
+  if(mode === 'prep'){ var im0 = document.createElement('img'); im0.className = 'life'; im0.src = ASSETS.owl_circle; im0.alt = ''; el.appendChild(im0); var inf = document.createElement('span'); inf.className = 'life-inf'; inf.textContent = '∞'; el.appendChild(inf); return; }
   var n = Math.max(lives, ARC.lives);
   for(var i=0;i<n;i++){
     var im = document.createElement('img'); im.className = 'life' + (i<lives ? '' : ' lost');
@@ -1348,6 +1353,7 @@ function pick(idx, ci){
 }
 function next(){ cur++; loadQ(); }
 function loseLife(){
+  if(mode === 'prep'){ setTimeout(next, 400); return; }   // PREP: vidas infinitas (pedido de Leonel)
   lives--; renderLives();
   setTimeout(function(){
     if(mode === 'prep' && lives <= 0){ lives = ARC.lives; renderLives(); }   // PREP: es para estudiar, nunca se acaba por vidas
@@ -1657,6 +1663,19 @@ function pushOne(node, val, key){
 function isProf(){ return !!(auth && PROF_UID && PROF_UID.indexOf('__')!==0 && auth.uid === PROF_UID); }
 // ----- PREP: banco privado del profe en Firebase /prep (solo lo lee su cuenta); no entra al scoreboard -----
 var PREP_RULES = [['Ética', /ethic|standards? of professional|guidance for standards|gips|code of ethics|professionalism|ética|misconduct|cfa institute|, cfa\b|\bthe standard\b|standard [ivx]+\(|soft dollar|material nonpublic|supervisor/i], ['Finanzas corporativas', /corporate|capital structure|cost of capital|capital budgeting|capital investments|capital allocation(?! line)|working capital|business models|organizational forms|stakeholders|measures of leverage|dividend policy|share repurchase|wacc|npv|\birr\b|payback|sources of capital|minority shareholders|acquisition|\besg\b|stranded asset|finanzas corporativas/i], ['Métodos cuantitativos', /quant|rates and returns|time value|statistical|probabilit|portfolio mathematics|simulation|estimation and inference|hypothesis|parametric|regression|big data|sampling|estadística|rendimientos|valor del dinero|distribution|correlation|standard deviation|confidence interval|p-value|t-test|chi-square|annuity|present value|future value|compound|geometric mean|harmonic|money-weighted|time-weighted|percentile|quartile|quintile|skew|kurtosis|variance|bayes|describing data|visualiz|retire|deposit/i], ['Economía', /market structures|aggregate output|business cycle|monetary|fiscal|geopolitic|international trade|currency|exchange rate|foreign exchange|capital flows|tipos de cambio|econom|\bgdp\b|inflation|elasticit|demand|supply|oligopol|monopol|central bank|macro/i], ['Estados financieros', /financial statement|financial reporting|income statement|balance sheet|cash flow|inventor|long-lived|long-term assets|income taxes|long-term liabilities|financial analysis techniques|analyzing|modeling|ifrs|gaap|depreciation|deferred tax|lease|\beps\b|earnings per share|receivable|payable|goodwill|impairment|revenue recognition/i], ['Renta variable', /equity|market organization|security market index|market efficiency|industry and company|company analysis|stock|dividend discount|gordon|p\/e|price-to|margin call|short sale|index/i], ['Renta fija', /fixed|bond|credit analysis|asset-backed|yield|duration|coupon|spread|mortgage|securitiz|treasury|ytm|convexity|renta fija/i], ['Derivados', /derivative|derivados|option|forward|futures|swap|\bput\b|\bcall\b|hedge ratio|binomial|put-call|strike|arbitrage/i], ['Alternativos', /alternative|hedge fund|private equity|real estate|commodit|infrastructure|\breit|alternativos/i], ['Portafolios', /portfolio|risk management|behavioral|fintech|asset allocation|investment policy|capm|capital allocation line|sharpe|\bbeta\b|systematic|diversif|efficient frontier|\bcal\b|\bsml\b|portafolios/i]];
+var CFA_VOL = {'Métodos cuantitativos':'Vol. 1 Quantitative Methods', 'Economía':'Vol. 2 Economics', 'Finanzas corporativas':'Vol. 3 Corporate Issuers', 'Estados financieros':'Vol. 4 Financial Statement Analysis', 'Renta variable':'Vol. 5 Equity Investments', 'Renta fija':'Vol. 6 Fixed Income', 'Derivados':'Vol. 7 Derivatives', 'Alternativos':'Vol. 8 Alternative Investments', 'Portafolios':'Vol. 9 Portfolio Management', 'Ética':'Vol. 10 Ethical and Professional Standards'};
+var KAPLAN_BOOK = {'Métodos cuantitativos':1, 'Economía':1, 'Finanzas corporativas':1, 'Estados financieros':2, 'Renta variable':2, 'Renta fija':3, 'Derivados':3, 'Alternativos':4, 'Portafolios':4, 'Ética':4};
+function prepRef(q){                  // "Dónde estudiarlo": reading + volumen del currículum 2025 + libro de SchweserNotes
+  if(!q || !q.topic) return '';
+  var a = prepArea(q), t = q.topic, reading = '';
+  var m = t.match(/· (?:LM\d+ )?(.+)$/); if(m) reading = m[1].trim();
+  if(/^(Mock|Kaplan Mock|Ethical and Professional|Equity Investments|Portfolio Management|Quantitative Methods)/.test(t) && !m) reading = '';
+  var parts = [];
+  if(reading && reading !== t) parts.push('Reading: ' + reading);
+  if(CFA_VOL[a]) parts.push('Currículum 2025 ' + CFA_VOL[a] + (/^CFA 2025 Quant · LM(\d+)/.test(t) ? ', Learning Module ' + t.match(/LM(\d+)/)[1] : ''));
+  if(KAPLAN_BOOK[a]) parts.push('SchweserNotes Book ' + KAPLAN_BOOK[a] + (/^Kaplan Notes/.test(t) ? ' (Module Quiz de ese reading)' : ''));
+  return parts.length ? 'Dónde estudiarlo: ' + parts.join(' · ') : '';
+}
 var PREP_AREAS = ['Ética', 'Métodos cuantitativos', 'Economía', 'Estados financieros', 'Finanzas corporativas', 'Renta variable', 'Renta fija', 'Derivados', 'Alternativos', 'Portafolios', 'Otros'];
 var selPrepArea = '';                 // '' = todas
 function prepArea(q){                 // módulo del Level I: viene en q.area o se deduce del reading / enunciado
@@ -1891,6 +1910,7 @@ function showReview(){
     d.querySelector('.rv-ok').textContent = '✓ ' + m.q.opts[m.q.c];
     d.querySelector('.rv-bad').textContent = m.chosen ? '✗ Tu respuesta: ' + m.chosen : '✗ Se acabó el tiempo';
     if(m.q.e) d.querySelector('.rv-e').textContent = m.q.e;
+    var ref = m.q.topic ? prepRef(m.q) : ''; if(ref){ var r = document.createElement('div'); r.className = 'rv-ref'; r.textContent = ref; d.appendChild(r); }
     L.appendChild(d);
   });
   L.scrollTop = 0; show('reviewScreen');
@@ -1960,6 +1980,7 @@ function showExp(right){
   document.getElementById('expTitle').textContent = right ? 'CORRECTO' : 'INCORRECTO';
   document.getElementById('expTopic').textContent = q.topic || CATS[q.cat] || '';
   document.getElementById('expTxt').textContent = q.e || '';
+  var ref = (mode === 'prep' && !right) ? prepRef(q) : ''; var re = document.getElementById('expRef'); re.textContent = ref; re.style.display = ref ? '' : 'none';
   document.getElementById('expTxt').scrollTop = 0;
   document.getElementById('expOverlay').classList.add('active');
 }
