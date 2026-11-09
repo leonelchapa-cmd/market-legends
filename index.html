@@ -1202,7 +1202,7 @@ function recordStat(q, ok){
 function levelOf(i){ var l=Math.floor(i/ARC.perLevel)+1; return mode==='infinito' ? l : Math.min(ARC.times.length, l); }
 function showLevel(cb){
   var cat = torMode ? (CATS[selCat] || 'TORNEO') : (mode==='infinito' ? 'INFINITO' : (CATS[selCat] || ''));
-  if(mode==='prep'){ cat = selPrepArea ? selPrepArea.toUpperCase() : (PREP ? PREP.titulo : 'PREP'); if(selPrepSrc) cat += ' · ' + selPrepSrc.toUpperCase(); }
+  if(mode==='prep'){ cat = selPrepArea ? selPrepArea.toUpperCase() : (PREP ? PREP.titulo : 'PREP'); if(selPrepSrc) cat += ' · ' + (selPrepSrc === 'k2019' ? 'KAPLAN 2019' : selPrepSrc.toUpperCase()); }
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundCat').style.display = cat ? '' : 'none';
@@ -1686,10 +1686,11 @@ function prepRef(q){                  // "Dónde estudiarlo": reading + volumen 
 var PREP_AREAS = ['Ética', 'Métodos cuantitativos', 'Economía', 'Estados financieros', 'Finanzas corporativas', 'Renta variable', 'Renta fija', 'Derivados', 'Alternativos', 'Portafolios', 'Otros'];
 var selPrepArea = '';                 // '' = todas
 var selPrepSrc = (function(){ try{ return localStorage.getItem('ml_prep_src') || ''; }catch(e){ return ''; } })();   // '' = todas
-var PREP_SRCS = [['', 'TODAS'], ['oficial', 'OFICIAL'], ['kaplan', 'KAPLAN'], ['otras', 'OTRAS']];
+var PREP_SRCS = [['', 'TODAS'], ['oficial', 'OFICIAL'], ['kaplan', 'KAPLAN'], ['k2019', 'KAPLAN 2019'], ['otras', 'OTRAS']];
 function prepSrc(q){                  // de dónde viene la pregunta
   var s = q.src || '', t = q.topic || '';
-  if(/^(qb2019|kb|Kaplan)/.test(s) || /^Kaplan/.test(t)) return 'kaplan';
+  if(/^qb2019/.test(s)) return 'k2019';
+  if(/^(kb|Kaplan)/.test(s) || /^Kaplan/.test(t)) return 'kaplan';
   if(!s || /^(cfa|Mock)/.test(s)) return 'oficial';
   return 'otras';
 }
