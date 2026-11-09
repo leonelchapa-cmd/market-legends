@@ -1079,7 +1079,7 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  if(mode==='prep'){ var pool = prepPool().filter(function(q){ return !selPrepArea || prepArea(q) === selPrepArea; }); if(!pool.length) pool = PREP.preguntas; rQ = shuffle(pool.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]|GBP|\d+[.,]\d+|¿cuánto|¿cuál es el precio|ganancia|pérdida/i.test(q.q) ? 240 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 240 s   // prep: 30 del banco privado, con explicación
+  if(mode==='prep'){ var pool = prepPool().filter(function(q){ return !selPrepArea || prepArea(q) === selPrepArea; }); if(!pool.length) pool = PREP.preguntas; rQ = prepPick(pool, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]|GBP|\d+[.,]\d+|¿cuánto|¿cuál es el precio|ganancia|pérdida/i.test(q.q) ? 240 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 240 s   // prep: 30 del banco privado, con explicación
   else if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
   else { rQ = withGen(buildRun(catPool(selCat)), selCat); }   // normal/torneo: 25 preguntas del tema elegido (0 = todas), una de cálculo por nivel si hay Portafolios
   renderLives(); renderHi();
@@ -1708,6 +1708,23 @@ function trackPrep(q, ok){
   if(mode !== 'prep' || !q) return;
   var st = loadPrepStat(), a = prepArea(q), e = st[a] || {n:0, ok:0}; e.n++; if(ok) e.ok++; st[a] = e;
   try{ localStorage.setItem(prepStatKey(), JSON.stringify(st)); }catch(x){}
+  var h = loadPrepHist(); h[prepKey(q)] = [ok ? 1 : 0, prepDay()];
+  try{ localStorage.setItem(prepHistKey(), JSON.stringify(h)); }catch(x){}
+}
+// Historial por pregunta: las acertadas ya no salen; las falladas regresan a los 2 días; el resto, nuevas.
+function prepHistKey(){ return 'ml_prephist_' + (auth ? auth.uid : 'anon'); }
+function loadPrepHist(){ try{ return JSON.parse(localStorage.getItem(prepHistKey()) || '{}'); }catch(e){ return {}; } }
+function prepDay(){ return Math.floor(Date.now() / 86400000); }
+function prepKey(q){ var t = (q.q || '') + '|' + ((q.opts || [])[0] || ''), h = 5381; for(var i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; return h.toString(36); }
+function prepPick(pool, n){
+  var h = loadPrepHist(), today = prepDay(), due = [], fresh = [], wait = [], done = [];
+  pool.forEach(function(q){ var r = h[prepKey(q)];
+    if(!r) fresh.push(q); else if(r[0]) done.push(q); else if(today - r[1] >= 2) due.push(q); else wait.push(q); });
+  due = shuffle(due); fresh = shuffle(fresh);
+  var out = due.slice(0, Math.min(10, n));                    // hasta 10 falladas que ya toca repasar
+  out = out.concat(fresh.slice(0, n - out.length));           // el resto, nunca vistas
+  [due.slice(10), shuffle(wait), shuffle(done)].forEach(function(r){ if(out.length < n) out = out.concat(r.slice(0, n - out.length)); });
+  return shuffle(out);
 }
 function showPrepAreas(){             // ¿QUÉ MÓDULO? : TODAS + cada área con cuántas hay y tu % de acierto
   var row = document.getElementById('catBtns'); row.innerHTML = ''; row.classList.add('two');
