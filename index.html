@@ -429,6 +429,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#00A0C8;}
 .lb-tab{font-family:'Katahdin','Fredoka One',cursive;font-size:14px;letter-spacing:1px;color:#9E9E9E;background:none;border:none;border-bottom:3px solid transparent;padding:4px 10px;cursor:pointer;}
 .lb-tab.on{color:#4A0080;border-bottom-color:#4A0080;}
 .lb-tab.hide{display:none;}
+.src-tabs{margin:0 0 10px;flex-wrap:wrap;gap:2px;}
+.src-tabs .lb-tab{font-size:12px;padding:4px 7px;}
+.src-tabs .lb-tab small{display:block;font-family:'RalewayG','Nunito',sans-serif;font-size:9px;letter-spacing:0;color:inherit;opacity:.8;}
 .ac-prof{margin-top:10px;width:100%;height:52px;border:none;cursor:pointer;background:transparent center/100% 100% no-repeat;font-family:'Katahdin','Fredoka One',cursive;font-size:17px;color:#fff;letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,.3);filter:hue-rotate(230deg) saturate(1.1);display:none;}
 .ac-prof.on{display:block;}
 
@@ -689,6 +692,7 @@ body.prep .ans .txt{font-size:14px;}
     <button id="catBack" class="lg-back-btn" onclick="goMenu()" aria-label="Menú">Menú</button>
     <div class="pf-title" id="catTitle">¿QUÉ TEMA?</div>
     <div class="pf-card" id="catCard">
+      <div class="lb-tabs src-tabs" id="srcTabs" style="display:none"></div>
       <div class="pf-row pf-row-big" id="catBtns"></div>
     </div>
   </div>
@@ -1055,7 +1059,7 @@ function renderCats(){ /* la portada ya no tiene selector: JUGAR mezcla todas la
 
 function startNormal(){
   if(!auth){ askName(startNormal); return; }
-  var row = document.getElementById('catBtns'); row.innerHTML = ''; row.classList.remove('two'); document.getElementById('catTitle').textContent = '¿QUÉ TEMA?';
+  var row = document.getElementById('catBtns'); row.innerHTML = ''; row.classList.remove('two'); document.getElementById('catTitle').textContent = '¿QUÉ TEMA?'; document.getElementById('srcTabs').style.display = 'none';
   var opts = [[0,'TODAS']]; Object.keys(CATS).forEach(function(k){ k=parseInt(k); if(catPool(k).length >= 10) opts.push([k, CATS[k]]); });
   opts.forEach(function(o){
     var b = document.createElement('button'); b.className = 'cat-btn' + (o[0]===selCat ? ' sel' : ''); b.textContent = o[1];
@@ -1075,7 +1079,7 @@ function startGame() {
     document.getElementById(id).disabled=false;
     document.getElementById(id).style.opacity='1';
   });
-  if(mode==='prep'){ var pool = PREP.preguntas.filter(function(q){ return !selPrepArea || prepArea(q) === selPrepArea; }); if(!pool.length) pool = PREP.preguntas; rQ = shuffle(pool.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]|GBP|\d+[.,]\d+|¿cuánto|¿cuál es el precio|ganancia|pérdida/i.test(q.q) ? 240 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 240 s   // prep: 30 del banco privado, con explicación
+  if(mode==='prep'){ var pool = prepPool().filter(function(q){ return !selPrepArea || prepArea(q) === selPrepArea; }); if(!pool.length) pool = PREP.preguntas; rQ = shuffle(pool.slice()).slice(0, 30).map(function(q){ var c = Object.assign({}, q); c.t = /closest to|[$%]|GBP|\d+[.,]\d+|¿cuánto|¿cuál es el precio|ganancia|pérdida/i.test(q.q) ? 240 : 90; return c; }); contUsed = true; }   // prep: las de cálculo con 240 s   // prep: 30 del banco privado, con explicación
   else if(mode==='infinito'){ rQ = buildInfinite(catPool(0)); contUsed = true; }   // infinito: todo el banco por dificultad y luego cálculos generados; sin continuar
   else { rQ = withGen(buildRun(catPool(selCat)), selCat); }   // normal/torneo: 25 preguntas del tema elegido (0 = todas), una de cálculo por nivel si hay Portafolios
   renderLives(); renderHi();
@@ -1198,7 +1202,7 @@ function recordStat(q, ok){
 function levelOf(i){ var l=Math.floor(i/ARC.perLevel)+1; return mode==='infinito' ? l : Math.min(ARC.times.length, l); }
 function showLevel(cb){
   var cat = torMode ? (CATS[selCat] || 'TORNEO') : (mode==='infinito' ? 'INFINITO' : (CATS[selCat] || ''));
-  if(mode==='prep') cat = selPrepArea ? selPrepArea.toUpperCase() : (PREP ? PREP.titulo : 'PREP');
+  if(mode==='prep'){ cat = selPrepArea ? selPrepArea.toUpperCase() : (PREP ? PREP.titulo : 'PREP'); if(selPrepSrc) cat += ' · ' + selPrepSrc.toUpperCase(); }
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundCat').style.display = cat ? '' : 'none';
@@ -1681,6 +1685,15 @@ function prepRef(q){                  // "Dónde estudiarlo": reading + volumen 
 }
 var PREP_AREAS = ['Ética', 'Métodos cuantitativos', 'Economía', 'Estados financieros', 'Finanzas corporativas', 'Renta variable', 'Renta fija', 'Derivados', 'Alternativos', 'Portafolios', 'Otros'];
 var selPrepArea = '';                 // '' = todas
+var selPrepSrc = (function(){ try{ return localStorage.getItem('ml_prep_src') || ''; }catch(e){ return ''; } })();   // '' = todas
+var PREP_SRCS = [['', 'TODAS'], ['oficial', 'OFICIAL'], ['kaplan', 'KAPLAN'], ['otras', 'OTRAS']];
+function prepSrc(q){                  // de dónde viene la pregunta
+  var s = q.src || '', t = q.topic || '';
+  if(/^(qb2019|kb|Kaplan)/.test(s) || /^Kaplan/.test(t)) return 'kaplan';
+  if(!s || /^(cfa|Mock)/.test(s)) return 'oficial';
+  return 'otras';
+}
+function prepPool(){ return PREP.preguntas.filter(function(q){ return !selPrepSrc || prepSrc(q) === selPrepSrc; }); }
 function prepArea(q){                 // módulo del Level I: viene en q.area o se deduce del reading / enunciado
   if(q.area) return q.area;
   var t = q.topic || '', i;
@@ -1699,9 +1712,19 @@ function trackPrep(q, ok){
 function showPrepAreas(){             // ¿QUÉ MÓDULO? : TODAS + cada área con cuántas hay y tu % de acierto
   var row = document.getElementById('catBtns'); row.innerHTML = ''; row.classList.add('two');
   document.getElementById('catTitle').textContent = '¿QUÉ MÓDULO?';
-  var cnt = {}; PREP.preguntas.forEach(function(q){ var a = prepArea(q); cnt[a] = (cnt[a] || 0) + 1; });
+  var tabs = document.getElementById('srcTabs'); tabs.innerHTML = ''; tabs.style.display = '';
+  var sc = {}; PREP.preguntas.forEach(function(q){ var k = prepSrc(q); sc[k] = (sc[k] || 0) + 1; });
+  PREP_SRCS.forEach(function(o){
+    var n = o[0] ? (sc[o[0]] || 0) : PREP.preguntas.length; if(!n) return;
+    var t = document.createElement('button'); t.className = 'lb-tab' + (o[0] === selPrepSrc ? ' on' : '');
+    t.innerHTML = o[1] + '<small>' + n + '</small>';
+    t.onclick = function(){ selPrepSrc = o[0]; try{ localStorage.setItem('ml_prep_src', selPrepSrc); }catch(e){} showPrepAreas(); };
+    tabs.appendChild(t);
+  });
+  var pool = prepPool();
+  var cnt = {}; pool.forEach(function(q){ var a = prepArea(q); cnt[a] = (cnt[a] || 0) + 1; });
   var st = loadPrepStat();
-  var opts = [['', 'TODAS', PREP.preguntas.length]];
+  var opts = [['', 'TODAS', pool.length]];
   PREP_AREAS.forEach(function(a){ if(cnt[a]) opts.push([a, a.toUpperCase(), cnt[a]]); });
   opts.forEach(function(o){
     var b = document.createElement('button'); b.className = 'cat-btn' + (o[0] === selPrepArea ? ' sel' : '');
