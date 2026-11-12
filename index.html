@@ -1206,7 +1206,7 @@ function showLevel(cb){
   document.getElementById('roundLbl').textContent   = 'NIVEL ' + level;
   document.getElementById('roundCat').textContent   = cat;
   document.getElementById('roundCat').style.display = cat ? '' : 'none';
-  document.getElementById('roundBonus').textContent = tMax + ' SEGUNDOS · PUNTOS x' + levelMult(level);
+  var nq = rQ[cur]; document.getElementById('roundBonus').textContent = ((nq && nq.t) ? nq.t : tMax) + ' SEGUNDOS · PUNTOS x' + levelMult(level);
   document.getElementById('lvlTag').textContent     = 'NIVEL ' + level;
   show('roundScreen');
   if(level>1) sfxPlay('nivel');
